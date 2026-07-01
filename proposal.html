@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>次の提案 — サロンヘルスチェック</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      /* ===== ページ共通 ===== */
+      .proposal-page {
+        min-height: 100vh;
+        padding: 40px 20px 80px;
+      }
+
+      .proposal-inner {
+        margin: 0 auto;
+        max-width: 720px;
+      }
+
+      .proposal-inner .eyebrow {
+        margin-bottom: 8px;
+      }
+
+      .proposal-inner h1 {
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1.1;
+        margin: 0 0 8px;
+      }
+
+      .proposal-inner .desc {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 36px;
+      }
+
+      /* ===== サービス選択 ===== */
+      #screen-select { display: block; }
+      #screen-hearing { display: none; }
+      #screen-result  { display: none; }
+
+      .service-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr 1fr;
+        margin-bottom: 32px;
+      }
+
+      .service-card {
+        align-items: center;
+        background: white;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        gap: 14px;
+        padding: 18px 16px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        user-select: none;
+      }
+
+      .service-card:hover {
+        border-color: var(--teal);
+      }
+
+      .service-card.selected {
+        background: var(--mint);
+        border-color: var(--teal);
+        box-shadow: 0 0 0 3px rgba(15,139,141,0.15);
+      }
+
+      .service-icon {
+        align-items: center;
+        background: var(--mint);
+        border-radius: 10px;
+        display: flex;
+        font-size: 22px;
+        height: 46px;
+        justify-content: center;
+        width: 46px;
+        flex-shrink: 0;
+      }
+
+      .service-card.selected .service-icon {
+        background: white;
+      }
+
+      .service-label {
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+
+      .service-check {
+        margin-left: auto;
+        color: var(--teal);
+        font-size: 20px;
+        display: none;
+        flex-shrink: 0;
+      }
+
+      .service-card.selected .service-check {
+        display: block;
+      }
+
+      .next-btn {
+        background: var(--teal);
+        border-radius: 10px;
+        font-size: 16px;
+        min-height: 52px;
+        padding: 0 28px;
+        width: 100%;
+        justify-content: center;
+        opacity: 0.4;
+        pointer-events: none;
+        transition: opacity 0.15s, background 0.15s;
+      }
+
+      .next-btn.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .next-btn.active:hover {
+        background: var(--teal-dark);
+      }
+
+      /* ===== ヒアリング ===== */
+      .hearing-header {
+        margin-bottom: 28px;
+      }
+
+      .hearing-header h2 {
+        font-size: 26px;
+        margin: 6px 0 6px;
+      }
+
+      .service-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 28px;
+      }
+
+      .service-tab {
+        background: var(--mint);
+        border: 1.5px solid var(--teal);
+        border-radius: 999px;
+        color: var(--teal-dark);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 6px 14px;
+        opacity: 0.45;
+        transition: opacity 0.12s;
+      }
+
+      .service-tab.active {
+        opacity: 1;
+        background: var(--teal);
+        color: white;
+      }
+
+      .hearing-form {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
+      }
+
+      .hearing-form h3 {
+        font-size: 17px;
+        margin: 0 0 20px;
+        color: var(--teal-dark);
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 18px;
+      }
+
+      .field label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        background: white;
+        border: 1.5px solid var(--line);
+        border-radius: 8px;
+        color: var(--ink);
+        font-family: "Noto Sans JP", "Hiragino Sans", Meiryo, system-ui, sans-serif;
+        font-size: 15px;
+        outline: none;
+        padding: 12px 14px;
+        transition: border-color 0.15s;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        border-color: var(--teal);
+      }
+
+      .field textarea {
+        min-height: 80px;
+        resize: vertical;
+      }
+
+      .analyze-btn {
+        background: var(--teal);
+        border-radius: 10px;
+        font-size: 16px;
+        justify-content: center;
+        min-height: 52px;
+        padding: 0 28px;
+        width: 100%;
+        transition: background 0.15s;
+      }
+
+      .analyze-btn:hover {
+        background: var(--teal-dark);
+      }
+
+      .back-link {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 16px;
+        padding: 0;
+        text-decoration: underline;
+        display: block;
+        text-align: center;
+      }
+
+      /* ===== ローディング ===== */
+      .loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(238,242,241,0.92);
+        place-items: center;
+        z-index: 100;
+      }
+
+      .loading-overlay.active {
+        display: grid;
+      }
+
+      .loading-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 48px 56px;
+        text-align: center;
+        display: grid;
+        gap: 20px;
+      }
+
+      .spinner {
+        animation: spin 0.8s linear infinite;
+        border: 4px solid var(--mint);
+        border-radius: 50%;
+        border-top-color: var(--teal);
+        height: 48px;
+        margin: 0 auto;
+        width: 48px;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .loading-card h2 {
+        color: var(--ink);
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .loading-card p {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0;
+      }
+
+      /* ===== 結果 ===== */
+      .result-service-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 28px;
+      }
+
+      .result-service-tag {
+        background: var(--mint);
+        border: 1.5px solid var(--teal);
+        border-radius: 999px;
+        color: var(--teal-dark);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 5px 14px;
+      }
+
+      .proposal-cards {
+        display: grid;
+        gap: 20px;
+        margin-bottom: 32px;
+      }
+
+      .proposal-card {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .proposal-card-head {
+        align-items: center;
+        background: var(--mint);
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 14px;
+        padding: 16px 20px;
+      }
+
+      .proposal-card-head .service-icon {
+        background: white;
+      }
+
+      .proposal-card-title {
+        flex: 1;
+      }
+
+      .proposal-card-title h3 {
+        font-size: 17px;
+        margin: 0 0 2px;
+        color: var(--teal-dark);
+      }
+
+      .proposal-card-title p {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .proposal-score {
+        color: var(--gold);
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      .proposal-card-body {
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .proposal-row {
+        display: grid;
+        gap: 4px;
+      }
+
+      .proposal-row-label {
+        color: var(--teal-dark);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .proposal-row-text {
+        color: var(--ink);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .talk-box {
+        background: #f7f9f8;
+        border-left: 3px solid var(--teal);
+        border-radius: 4px;
+        font-size: 14px;
+        font-style: italic;
+        line-height: 1.65;
+        padding: 12px 16px;
+        color: var(--ink);
+      }
+
+      .print-btn {
+        background: var(--ink);
+        border-radius: 10px;
+        font-size: 15px;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 24px;
+        width: 100%;
+        transition: background 0.15s;
+      }
+
+      .print-btn:hover {
+        background: #344250;
+      }
+
+      .restart-link {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 14px;
+        padding: 0;
+        text-decoration: underline;
+        display: block;
+        text-align: center;
+      }
+
+      @media (max-width: 600px) {
+        .service-grid { grid-template-columns: 1fr; }
+        .hearing-form { padding: 20px 18px; }
+      }
+
+      @media print {
+        .topbar, .next-btn, .analyze-btn, .back-link, .restart-link, .print-btn { display: none !important; }
+        #screen-select, #screen-hearing { display: none !important; }
+        #screen-result { display: block !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Salon Health Check</p>
+        <h1>次の提案を選ぶ</h1>
+      </div>
+      <button type="button" id="printButton" aria-label="PDF保存">
+        <span aria-hidden="true">↓</span> PDF保存
+      </button>
+    </header>
+
+    <main class="proposal-page">
+      <div class="proposal-inner">
+
+        <!-- ① サービス選択 -->
+        <div id="screen-select">
+          <p class="eyebrow">Step 1 / 3</p>
+          <h1>次に提案するサービスを選ぶ</h1>
+          <p class="desc">診断結果をもとに、今回提案したいサービスを選んでください。複数選択できます。</p>
+
+          <div class="service-grid" id="serviceGrid">
+            <div class="service-card" data-service="homepage">
+              <div class="service-icon">🌐</div>
+              <span class="service-label">ホームページ<br>制作・改善</span>
+              <span class="service-check">✓</span>
+            </div>
+            <div class="service-card" data-service="llmo">
+              <div class="service-icon">🤖</div>
+              <span class="service-label">LLMO診断<br>（AI検索対策）</span>
+              <span class="service-check">✓</span>
+            </div>
+            <div class="service-card" data-service="gbp">
+              <div class="service-icon">📍</div>
+              <span class="service-label">Googleビジネス<br>プロフィール改善</span>
+              <span class="service-check">✓</span>
+            </div>
+            <div class="service-card" data-service="instagram">
+              <div class="service-icon">📸</div>
+              <span class="service-label">Instagram<br>運用支援</span>
+              <span class="service-check">✓</span>
+            </div>
+            <div class="service-card" data-service="ai">
+              <div class="service-icon">⚡</div>
+              <span class="service-label">AI活用・<br>業務改善</span>
+              <span class="service-check">✓</span>
+            </div>
+            <div class="service-card" data-service="other">
+              <div class="service-icon">💬</div>
+              <span class="service-label">その他</span>
+              <span class="service-check">✓</span>
+            </div>
+          </div>
+
+          <button class="next-btn" id="nextBtn">選択したサービスでヒアリングへ →</button>
+        </div>
+
+        <!-- ② ヒアリング -->
+        <div id="screen-hearing">
+          <p class="eyebrow">Step 2 / 3</p>
+          <h2 style="font-size:26px;font-weight:900;margin:6px 0 6px;">ヒアリング</h2>
+          <p class="desc">サービスごとに確認したい内容を入力してください。</p>
+
+          <div class="service-tabs" id="serviceTabs"></div>
+          <div id="hearingForms"></div>
+
+          <button class="analyze-btn" id="analyzeBtn">AIに提案書を作成させる →</button>
+          <button class="back-link" id="backToSelect">← サービス選択に戻る</button>
+        </div>
+
+        <!-- ③ 提案結果 -->
+        <div id="screen-result">
+          <p class="eyebrow">Step 3 / 3</p>
+          <h1>AI提案書</h1>
+          <p class="desc">診断結果とヒアリング内容をもとに、提案の優先順位と営業トーク例を生成しました。</p>
+
+          <div class="result-service-tags" id="resultTags"></div>
+          <div class="proposal-cards" id="proposalCards"></div>
+
+          <button class="print-btn" onclick="window.print()">↓ PDF保存</button>
+          <button class="restart-link" id="restartBtn">← サービス選択に戻る</button>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ローディング -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <h2>提案書を作成中</h2>
+        <p>ヒアリング内容をもとにAIが分析しています…</p>
+      </div>
+    </div>
+
+    <script>
+      // ===== データ =====
+      const SERVICE_DEF = {
+        homepage: {
+          label: "ホームページ制作・改善",
+          icon: "🌐",
+          fields: [
+            { id: "hp_url",     label: "ホームページURL",       type: "text",   placeholder: "https://example.com" },
+            { id: "hp_since",   label: "公開時期",               type: "text",   placeholder: "例：3年前" },
+            { id: "hp_update",  label: "更新頻度",               type: "select", options: ["ほぼ更新なし","月1〜2回","週1回以上"] },
+            { id: "hp_reserve", label: "予約方法",               type: "text",   placeholder: "例：電話、ホットペッパー" },
+            { id: "hp_trouble", label: "現在困っていること",     type: "textarea",placeholder: "例：問い合わせが少ない、スマホで見づらい" },
+          ],
+        },
+        llmo: {
+          label: "LLMO診断",
+          icon: "🤖",
+          fields: [
+            { id: "llmo_traffic", label: "検索からの流入はありますか？", type: "select", options: ["ほとんどない","少しある","安定してある"] },
+            { id: "llmo_aware",   label: "AI検索を意識したことがありますか？", type: "select", options: ["ない","少し気にしている","対策している"] },
+            { id: "llmo_faq",     label: "FAQページはありますか？",       type: "select", options: ["ない","ある（更新なし）","ある（定期更新）"] },
+            { id: "llmo_blog",    label: "ブログ更新頻度",               type: "select", options: ["ほぼなし","月1〜2回","週1回以上"] },
+          ],
+        },
+        gbp: {
+          label: "Googleビジネスプロフィール改善",
+          icon: "📍",
+          fields: [
+            { id: "gbp_rating",  label: "現在の評価（星）",     type: "text",   placeholder: "例：4.2" },
+            { id: "gbp_reviews", label: "口コミ件数",           type: "text",   placeholder: "例：18件" },
+            { id: "gbp_photo",   label: "写真の枚数",           type: "select", options: ["5枚以下","6〜20枚","21枚以上"] },
+            { id: "gbp_reply",   label: "口コミへの返信",       type: "select", options: ["ほぼしていない","ときどきしている","必ずしている"] },
+          ],
+        },
+        instagram: {
+          label: "Instagram運用支援",
+          icon: "📸",
+          fields: [
+            { id: "ig_followers", label: "フォロワー数",           type: "text",   placeholder: "例：320" },
+            { id: "ig_freq",      label: "投稿頻度",               type: "select", options: ["ほぼなし","月1〜3回","週1〜2回","週3回以上"] },
+            { id: "ig_reel",      label: "リール活用",             type: "select", options: ["していない","ときどきしている","積極的にしている"] },
+            { id: "ig_reserve",   label: "予約導線（リンクなど）", type: "select", options: ["設置なし","プロフィールにリンクあり","投稿内にも誘導あり"] },
+          ],
+        },
+        ai: {
+          label: "AI活用・業務改善",
+          icon: "⚡",
+          fields: [
+            { id: "ai_current", label: "現在使っているAIツール",   type: "text",    placeholder: "例：ChatGPT、なし" },
+            { id: "ai_task",    label: "自動化したい業務",         type: "textarea",placeholder: "例：予約確認メール、SNS投稿文作成" },
+            { id: "ai_budget",  label: "月額予算感",               type: "select",  options: ["〜1万円","1〜3万円","3〜5万円","5万円以上"] },
+          ],
+        },
+        other: {
+          label: "その他",
+          icon: "💬",
+          fields: [
+            { id: "other_detail", label: "相談内容", type: "textarea", placeholder: "ご自由にお書きください" },
+          ],
+        },
+      };
+
+      // ダミー提案データ（デモ用）
+      const DUMMY_PROPOSALS = {
+        homepage: {
+          score: 5,
+          issue:    "予約・お問い合わせボタンと地図リンクが不足しています。来店前に離脱している可能性があります。",
+          action:   "①目立つ位置に予約ボタンを設置　②Googleマップへのリンクを追加　③スマートフォン表示の確認",
+          priority: "高",
+          effect:   "問い合わせ数の増加、来店率の向上",
+          talk:     "「今のホームページ、実はお客様が予約に進む前に迷ってしまう構造になっています。ボタン一つ追加するだけで改善できるので、まずここから試してみませんか？」",
+        },
+        llmo: {
+          score: 4,
+          issue:    "FAQページが未設置のため、AI検索で情報が見つかりにくい状態です。",
+          action:   "①よくある質問ページの作成　②ブログへのキーワード記事追加　③構造化データの整備",
+          priority: "中",
+          effect:   "AI検索からの流入増加、信頼性の向上",
+          talk:     "「最近、ChatGPTやGoogleのAIモードで検索するお客様が増えています。FAQ一つ作るだけで、AI検索に引っかかりやすくなりますよ。」",
+        },
+        gbp: {
+          score: 5,
+          issue:    "口コミ数がエリア平均より少なく、新規顧客の不安につながっている可能性があります。",
+          action:   "①来店後のお客様への口コミ依頼導線を整備　②全口コミへの返信　③写真を20枚以上に増やす",
+          priority: "高",
+          effect:   "口コミ増加、エリア内での信頼度向上",
+          talk:     "「エリアの上位店と比べると口コミがまだ少ない状態です。来店されたお客様に一声かけるだけで増やせます。一緒に仕組みを作りましょう。」",
+        },
+        instagram: {
+          score: 3,
+          issue:    "リールの活用が少なく、新規リーチが限られています。",
+          action:   "①施術ビフォーアフターのリール作成　②予約リンクをプロフィールに設置　③投稿頻度を週2回以上に",
+          priority: "中",
+          effect:   "フォロワー増加、予約への誘導強化",
+          talk:     "「Instagramからの予約が取れているサロンは、リール投稿が多い傾向があります。15秒でもいいので、施術の様子を見せると一気に変わりますよ。」",
+        },
+        ai: {
+          score: 4,
+          issue:    "手作業が多い業務があり、AIツールで自動化できる余地があります。",
+          action:   "①予約確認メールの自動化　②SNS投稿文の自動生成　③業務フローの見直し",
+          priority: "中",
+          effect:   "業務時間の削減、スタッフの負担軽減",
+          talk:     "「毎日の業務の中で、AIに任せられることが意外と多いんです。まず一つ試してみましょう。慣れたら次のステップへ進めます。」",
+        },
+        other: {
+          score: 3,
+          issue:    "ご相談内容を確認しました。詳細をヒアリングのうえ最適な提案をご用意します。",
+          action:   "①課題の整理　②優先順位の確認　③提案書の作成",
+          priority: "要確認",
+          effect:   "課題解決・業務改善",
+          talk:     "「まずは現状をしっかり確認させてください。課題が整理できれば、具体的な改善策をご提案できます。」",
+        },
+      };
+
+      const stars = (n) => "★★★★★☆☆☆☆☆".slice(5 - n, 10 - n);
+
+      // ===== 状態 =====
+      let selectedServices = [];
+      let activeTab = null;
+
+      // ===== ① サービス選択 =====
+      document.querySelectorAll(".service-card").forEach(card => {
+        card.addEventListener("click", () => {
+          card.classList.toggle("selected");
+          const svc = card.dataset.service;
+          if (card.classList.contains("selected")) {
+            selectedServices.push(svc);
+          } else {
+            selectedServices = selectedServices.filter(s => s !== svc);
+          }
+          const btn = document.getElementById("nextBtn");
+          btn.classList.toggle("active", selectedServices.length > 0);
+        });
+      });
+
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        if (!selectedServices.length) return;
+        buildHearingForms();
+        show("screen-hearing");
+      });
+
+      // ===== ② ヒアリング =====
+      function buildHearingForms() {
+        const tabsEl  = document.getElementById("serviceTabs");
+        const formsEl = document.getElementById("hearingForms");
+        tabsEl.innerHTML = "";
+        formsEl.innerHTML = "";
+
+        selectedServices.forEach((svc, i) => {
+          const def = SERVICE_DEF[svc];
+          // タブ
+          const tab = document.createElement("button");
+          tab.className = "service-tab" + (i === 0 ? " active" : "");
+          tab.textContent = def.label;
+          tab.dataset.svc = svc;
+          tab.addEventListener("click", () => switchTab(svc));
+          tabsEl.appendChild(tab);
+
+          // フォーム
+          const form = document.createElement("div");
+          form.className = "hearing-form";
+          form.id = "form-" + svc;
+          form.style.display = i === 0 ? "block" : "none";
+
+          let html = `<h3>${def.icon} ${def.label}</h3>`;
+          def.fields.forEach(f => {
+            html += `<div class="field"><label for="${f.id}">${f.label}</label>`;
+            if (f.type === "select") {
+              html += `<select id="${f.id}">` + f.options.map(o => `<option>${o}</option>`).join("") + `</select>`;
+            } else if (f.type === "textarea") {
+              html += `<textarea id="${f.id}" placeholder="${f.placeholder || ""}"></textarea>`;
+            } else {
+              html += `<input type="text" id="${f.id}" placeholder="${f.placeholder || ""}" autocomplete="off">`;
+            }
+            html += `</div>`;
+          });
+          form.innerHTML = html;
+          formsEl.appendChild(form);
+        });
+
+        activeTab = selectedServices[0];
+      }
+
+      function switchTab(svc) {
+        document.querySelectorAll(".service-tab").forEach(t => t.classList.toggle("active", t.dataset.svc === svc));
+        selectedServices.forEach(s => {
+          const el = document.getElementById("form-" + s);
+          if (el) el.style.display = s === svc ? "block" : "none";
+        });
+        activeTab = svc;
+      }
+
+      document.getElementById("backToSelect").addEventListener("click", () => show("screen-select"));
+
+      document.getElementById("analyzeBtn").addEventListener("click", () => {
+        document.getElementById("loadingOverlay").classList.add("active");
+        setTimeout(() => {
+          document.getElementById("loadingOverlay").classList.remove("active");
+          buildResult();
+          show("screen-result");
+        }, 2200);
+      });
+
+      // ===== ③ 結果 =====
+      function buildResult() {
+        // タグ
+        const tagsEl = document.getElementById("resultTags");
+        tagsEl.innerHTML = selectedServices.map(s =>
+          `<span class="result-service-tag">${SERVICE_DEF[s].icon} ${SERVICE_DEF[s].label}</span>`
+        ).join("");
+
+        // カード
+        const cardsEl = document.getElementById("proposalCards");
+        // スコア順にソート
+        const sorted = [...selectedServices].sort((a, b) => DUMMY_PROPOSALS[b].score - DUMMY_PROPOSALS[a].score);
+
+        cardsEl.innerHTML = sorted.map(svc => {
+          const def = SERVICE_DEF[svc];
+          const p   = DUMMY_PROPOSALS[svc];
+          return `
+            <div class="proposal-card">
+              <div class="proposal-card-head">
+                <div class="service-icon">${def.icon}</div>
+                <div class="proposal-card-title">
+                  <h3>${def.label}</h3>
+                  <p>優先度：${p.priority}</p>
+                </div>
+                <div class="proposal-score">${stars(p.score)}</div>
+              </div>
+              <div class="proposal-card-body">
+                <div class="proposal-row">
+                  <span class="proposal-row-label">現状・課題</span>
+                  <p class="proposal-row-text">${p.issue}</p>
+                </div>
+                <div class="proposal-row">
+                  <span class="proposal-row-label">改善アクション</span>
+                  <p class="proposal-row-text">${p.action}</p>
+                </div>
+                <div class="proposal-row">
+                  <span class="proposal-row-label">期待できる効果</span>
+                  <p class="proposal-row-text">${p.effect}</p>
+                </div>
+                <div class="proposal-row">
+                  <span class="proposal-row-label">営業トーク例</span>
+                  <div class="talk-box">${p.talk}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        selectedServices = [];
+        document.querySelectorAll(".service-card").forEach(c => c.classList.remove("selected"));
+        document.getElementById("nextBtn").classList.remove("active");
+        show("screen-select");
+      });
+
+      document.getElementById("printButton").addEventListener("click", () => window.print());
+
+      // ===== ユーティリティ =====
+      function show(id) {
+        ["screen-select","screen-hearing","screen-result"].forEach(s => {
+          document.getElementById(s).style.display = s === id ? "block" : "none";
+        });
+        window.scrollTo(0, 0);
+      }
+    </script>
+  </body>
+</html>

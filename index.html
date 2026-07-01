@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>サロンヘルスチェック営業カード</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Salon Health Check</p>
+        <h1>営業スライドカード</h1>
+      </div>
+      <div class="actions" style="display:flex;gap:10px;">
+        <button type="button" id="printButton" aria-label="印刷またはPDF保存">
+          <span aria-hidden="true">↓</span>
+          PDF保存
+        </button>
+        <button type="button" id="proposalButton" style="background:var(--teal);" onclick="window.location.href='./proposal.html'">
+          次の提案へ →
+        </button>
+      </div>
+    </header>
+
+    <main id="deck" class="deck" aria-live="polite"></main>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

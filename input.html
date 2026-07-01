@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>サロンヘルスチェック</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .input-page {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 40px 20px;
+      }
+
+      .input-card {
+        background: var(--paper);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 56px 64px;
+        width: 100%;
+        max-width: 560px;
+      }
+
+      .input-card .eyebrow {
+        margin-bottom: 8px;
+      }
+
+      .input-card h1 {
+        font-size: 36px;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+        margin: 0 0 8px;
+        color: var(--ink);
+      }
+
+      .input-card .desc {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 40px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .field label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .field label .optional {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--muted);
+        background: #f0f0ee;
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+
+      .field input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        font-size: 16px;
+        font-family: "Noto Sans JP", "Hiragino Sans", Meiryo, system-ui, sans-serif;
+        color: var(--ink);
+        background: white;
+        transition: border-color 0.15s;
+        outline: none;
+      }
+
+      .field input:focus {
+        border-color: var(--teal);
+      }
+
+      .field input::placeholder {
+        color: #b0b8c0;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 18px;
+        background: var(--teal);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 17px;
+        font-weight: 700;
+        font-family: "Noto Sans JP", "Hiragino Sans", Meiryo, system-ui, sans-serif;
+        cursor: pointer;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: background 0.15s;
+        min-height: auto;
+      }
+
+      .submit-btn:hover {
+        background: var(--teal-dark);
+      }
+
+      /* ローディング */
+      .loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(238, 242, 241, 0.92);
+        place-items: center;
+        z-index: 100;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .loading-overlay.active {
+        display: grid;
+      }
+
+      .loading-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 48px 56px;
+        text-align: center;
+        display: grid;
+        gap: 20px;
+      }
+
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid var(--mint);
+        border-top-color: var(--teal);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .loading-card h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+        color: var(--ink);
+      }
+
+      .loading-card p {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .loading-store-name {
+        font-weight: 700;
+        color: var(--teal-dark);
+      }
+
+      @media (max-width: 600px) {
+        .input-card {
+          padding: 36px 28px;
+        }
+        .input-card h1 {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="input-page">
+      <div class="input-card">
+        <p class="eyebrow">Salon Health Check</p>
+        <h1>サロン診断</h1>
+        <p class="desc">店舗名を入力するだけで、集客導線・口コミ・ホームページの改善ポイントを自動で診断します。</p>
+
+        <div class="field">
+          <label for="storeName">店舗名</label>
+          <input
+            type="text"
+            id="storeName"
+            placeholder="例：サロンdeエステKY"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label for="genre">
+            ジャンル
+            <span class="optional">任意</span>
+          </label>
+          <input
+            type="text"
+            id="genre"
+            placeholder="例：エステ、ヘアサロン、ネイル"
+            autocomplete="off"
+          />
+        </div>
+
+        <button class="submit-btn" id="diagnoseBtn">
+          <span>診断する</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ローディング -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <h2><span class="loading-store-name" id="loadingName"></span>を診断中</h2>
+        <p>GoogleMap・ホームページの情報を取得しています…</p>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById("diagnoseBtn").addEventListener("click", () => runDiagnosis());
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runDiagnosis();
+      });
+
+      async function runDiagnosis() {
+        const name  = document.getElementById("storeName").value.trim();
+        const genre = document.getElementById("genre").value.trim();
+        if (!name) {
+          document.getElementById("storeName").focus();
+          return;
+        }
+
+        // ローディング表示
+        document.getElementById("loadingName").textContent = name;
+        document.getElementById("loadingOverlay").classList.add("active");
+
+        try {
+          // ① Google Places API で店舗情報取得
+          const placesRes = await fetch("/.netlify/functions/places", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ storeName: name, genre }),
+          });
+
+          if (!placesRes.ok) {
+            const err = await placesRes.json();
+            throw new Error(err.error || "店舗情報の取得に失敗しました");
+          }
+
+          const placeData = await placesRes.json();
+
+          // ② Anthropic API でホームページ診断・改善提案を生成
+          const analyzeRes = await fetch("/.netlify/functions/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ placeData }),
+          });
+
+          if (!analyzeRes.ok) {
+            const err = await analyzeRes.json();
+            throw new Error(err.error || "診断の生成に失敗しました");
+          }
+
+          const analysis = await analyzeRes.json();
+
+          // ③ 結果をsessionStorageに保存してindex.htmlへ遷移
+          const report = {
+            brand: "サロンヘルスチェック",
+            storeName: placeData.storeName,
+            storeShortName: placeData.storeName,
+            area: placeData.address,
+            diagnosisDate: new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit" }).replace("/", "."),
+            map: {
+              rating: placeData.rating,
+              areaRating: placeData.areaRating,
+              reviews: placeData.reviews,
+              areaReviews: placeData.areaReviews,
+              nextReviewGoal: placeData.reviews ? Math.ceil(placeData.reviews / 5) * 5 + 5 : 30,
+            },
+            homepageChecks: analysis.homepageChecks || [],
+            priorities: analysis.priorities || [],
+            superiorStores: placeData.superiorStores || [],
+            nearbyCompetitors: placeData.nearbyCompetitors || [],
+            summary: analysis.summary || "",
+            closing: analysis.closing || "",
+            offer: analysis.offer || { title: "初回改善サポート", items: [], cta: "まずここから着手しましょう" },
+          };
+
+          sessionStorage.setItem("salonReport", JSON.stringify(report));
+          window.location.href = "./index.html";
+
+        } catch (err) {
+          document.getElementById("loadingOverlay").classList.remove("active");
+          alert("エラーが発生しました：" + err.message);
+        }
+      }
+    </script>
+  </body>
+</html>
