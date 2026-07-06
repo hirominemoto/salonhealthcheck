@@ -71,7 +71,7 @@ button {
   border-radius: 8px;
   box-shadow: var(--shadow);
   min-height: 620px;
-  overflow: hidden;
+  overflow: visible;
   padding: 42px;
   position: relative;
 }
