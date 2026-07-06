@@ -300,6 +300,8 @@ p {
   margin: 0;
   padding: 0;
   align-content: start;
+  max-height: 380px;
+  overflow-y: auto;
 }
 
 .check-list li {
@@ -551,7 +553,8 @@ p {
 
   .check-list {
     gap: 3px;
-    overflow: hidden;
+    max-height: none;
+    overflow: visible;
   }
 
   .check-list li {
