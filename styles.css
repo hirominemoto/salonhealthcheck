@@ -516,8 +516,11 @@ p {
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    height: 9in;
+    min-height: 9in;
+    height: auto;
+    overflow: visible;
     page-break-after: always;
+    page-break-inside: avoid;
     padding: 0.58in;
     width: 16in;
   }
