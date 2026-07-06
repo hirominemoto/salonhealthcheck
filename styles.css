@@ -509,19 +509,41 @@ p {
 
 @media print {
   @page { margin: 0; size: 16in 9in; }
+
   body { background: white; }
   .topbar { display: none; }
   .deck { display: block; margin: 0; max-width: none; padding: 0; }
+
+  /* スライド1枚 = 印刷1ページに固定 */
   .slide {
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    min-height: 9in;
-    height: auto;
-    overflow: visible;
-    page-break-after: always;
-    page-break-inside: avoid;
-    padding: 0.58in;
     width: 16in;
+    height: 9in;          /* ページサイズに固定 */
+    overflow: hidden;     /* はみ出しを隠す（切れ防止） */
+    padding: 0.58in;
+    page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* スライド内のスクロール可能なリストを展開 */
+  .competitor-list {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .check-list {
+    overflow: visible;
+  }
+
+  /* 最後のスライドは改ページしない */
+  .slide:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
   }
 }
