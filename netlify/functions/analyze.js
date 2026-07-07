@@ -37,17 +37,16 @@ Google評価: ${placeData.rating ?? "不明"}
   ],
   "priorities": [
     { "title": "改善項目1", "workload": "低", "impact": "高", "time": "約20分", "score": 5, "issue": "数値を使った現状の問題点", "reason": "エリア比較・数値的根拠を含む優先理由", "suggestion": "具体的な改善提案", "expected_outcome": "期待できる効果" },
-    { "title": "改善項目2", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "issue": "現状の問題点", "reason": "優先理由", "suggestion": "具体的な改善提案", "expected_outcome": "期待できる効果" },
-    { "title": "改善項目3", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "issue": "現状の問題点", "reason": "優先理由", "suggestion": "具体的な改善提案", "expected_outcome": "期待できる効果" }
+    { "title": "改善項目2", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "issue": "現状の問題点", "reason": "優先理由", "suggestion": "具体的な改善提案", "expected_outcome": "期待できる効果" }
   ],
   "offer": {
     "title": "初回改善サポート",
-    "items": ["提案項目1", "提案項目2", "提案項目3"],
+    "items": ["提案項目1", "提案項目2"],
     "cta": "まず短時間でできる改善から着手しましょう"
   }
 }
 
-homepageChecksのpassedはホームページの有無と情報から推測。prioritiesは改善効果が高い順に3件。`;
+homepageChecksのpassedはホームページの有無と情報から推測。prioritiesは改善効果が高い順に2件。`;
 
   try {
     console.log("API呼び出し開始");
