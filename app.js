@@ -30,7 +30,10 @@ function priorityBlock(item, index) {
       <div class="rank">0${index + 1}</div>
       <div>
         <h3>${item.title}</h3>
-        <p>${item.suggestion}</p>
+        ${item.issue ? `<div class="priority-detail"><span class="priority-label">現状の課題</span><p>${item.issue}</p></div>` : ""}
+        ${item.reason ? `<div class="priority-detail"><span class="priority-label">優先する理由</span><p>${item.reason}</p></div>` : ""}
+        <div class="priority-detail"><span class="priority-label">改善提案</span><p>${item.suggestion}</p></div>
+        ${item.expected_outcome ? `<div class="priority-detail"><span class="priority-label">期待できる効果</span><p>${item.expected_outcome}</p></div>` : ""}
         <div class="tags">
           <span>作業量 ${item.workload}</span>
           <span>期待効果 ${item.impact}</span>
@@ -88,12 +91,9 @@ function donutChart(passed, failed) {
   const passedDash = circumference * passedRatio;
   const failedDash = circumference * (1 - passedRatio);
 
-  // 12時方向スタートのためrotate(-90)
   return `
     <svg class="donut-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-      <!-- 背景円 -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f0f0ee" stroke-width="22"/>
-      <!-- 改善余地（coral） -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
         stroke="#e4685d"
         stroke-width="22"
@@ -102,7 +102,6 @@ function donutChart(passed, failed) {
         transform="rotate(-90 ${cx} ${cy})"
         stroke-linecap="round"
       />
-      <!-- できている（teal） -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
         stroke="#0f8b8d"
         stroke-width="22"
@@ -111,7 +110,6 @@ function donutChart(passed, failed) {
         transform="rotate(-90 ${cx} ${cy})"
         stroke-linecap="round"
       />
-      <!-- 中央テキスト -->
       <text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="36" font-weight="900" fill="#1f2933" font-family="Noto Sans JP, sans-serif">${passed}</text>
       <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="13" font-weight="700" fill="#687482" font-family="Noto Sans JP, sans-serif">/ ${passed + failed}項目</text>
       <text x="${cx}" y="${cy + 34}" text-anchor="middle" font-size="12" font-weight="500" fill="#687482" font-family="Noto Sans JP, sans-serif">達成</text>
