@@ -83,6 +83,7 @@ homepageChecksのpassedはホームページの有無と情報から推測。pri
     const jsonStr = text.slice(start, end + 1);
     const analysis = JSON.parse(jsonStr);
 
+    console.log(JSON.stringify(analysis, null, 2));
     console.log(`完了 - 合計時間: ${Date.now() - startTime}ms`);
     return { statusCode: 200, body: JSON.stringify(analysis) };
   } catch (err) {
