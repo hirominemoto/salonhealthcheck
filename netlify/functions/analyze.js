@@ -6,7 +6,18 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: "店舗データが必要です" }) };
   }
 
-  const prompt = `あなたは美容サロンの営業支援AIです。以下の店舗データをもとに診断を行ってください。
+  const systemPrompt = `あなたは美容サロンの集客支援に特化した営業コンサルタントAIです。
+HotPepper BeautyやGoogleビジネスプロフィールの運用実績を持ち、現場の営業担当者が店舗オーナーへそのまま説明できるアドバイスを提供します。
+
+【出力の原則】
+- 専門用語は使わない。中学生でもわかる言葉で書く
+- 1〜2分で口頭説明できる分量にする
+- 「一般的なアドバイス」ではなく、提供されたデータの数値を必ず根拠として使う
+- 改善提案ごとに「なぜこれが優先なのか」の理由を必ず書く
+- 同じ書き出し・同じ表現を繰り返さない
+- 店舗名・地域名・具体的な数値を積極的に使い、どの店舗にも当てはまる汎用文章にしない`;
+
+  const prompt = `以下の店舗データをもとに診断を行ってください。
 
 【店舗情報】
 店舗名: ${placeData.storeName}
@@ -21,23 +32,53 @@ Google評価: ${placeData.rating ?? "不明"}
 以下のJSON形式のみで回答してください。前後に説明文や\`\`\`は不要です。JSONのみ出力してください。
 
 {
-  "summary": "診断結果の1〜2文の要約",
-  "closing": "営業担当へのひとこと（1文）",
+  "summary": "診断結果の1〜2文の要約（店舗名と具体的な数値を含めること）",
+  "closing": "営業担当へのひとこと（1文。数値根拠を含め、次のアクションが明確になる内容）",
   "homepageChecks": [
     { "label": "営業時間", "passed": true, "positive": "営業時間が掲載されています", "suggestion": "営業時間を掲載してください", "outcome": "来店前に確認できます" },
     { "label": "電話番号", "passed": true, "positive": "電話番号が掲載されています", "suggestion": "電話番号を掲載してください", "outcome": "問い合わせしやすくなります" },
     { "label": "LINE導線", "passed": false, "positive": "LINE導線があります", "suggestion": "LINE相談窓口の設置をおすすめします", "outcome": "電話が苦手な世代の問い合わせハードルが下がります" },
     { "label": "FAQ", "passed": false, "positive": "FAQが設置されています", "suggestion": "よくある質問ページの設置をおすすめします", "outcome": "お客様の疑問解消につながります" },
     { "label": "GoogleMapリンク", "passed": false, "positive": "地図リンクがあります", "suggestion": "トップページへの地図リンクの設置をおすすめします", "outcome": "来店時の道案内がスムーズになります" },
-    { "label": "Instagramリンク", "passed": false, "positive": "Instagramリンクがあります", "suggestion": "InstagramへのリンクをトップページへS設置することをおすすめします", "outcome": "SNSからの流入経路が確保されます" },
+    { "label": "Instagramリンク", "passed": false, "positive": "Instagramリンクがあります", "suggestion": "Instagramへのリンクをトップページへ設置することをおすすめします", "outcome": "SNSからの流入経路が確保されます" },
     { "label": "採用ページ", "passed": false, "positive": "採用情報が掲載されています", "suggestion": "採用ページへの入口の設置をおすすめします", "outcome": "応募者が情報を見つけやすくなります" },
     { "label": "ブログ更新", "passed": false, "positive": "ブログが更新されています", "suggestion": "ブログやお知らせの定期更新をおすすめします", "outcome": "サイトが活動的な印象を与えられます" },
     { "label": "予約・お問い合わせボタン", "passed": false, "positive": "予約ボタンがあります", "suggestion": "目立つ位置への予約・お問い合わせボタンの設置をおすすめします", "outcome": "お客様が次の行動に進みやすくなります" }
   ],
   "priorities": [
-    { "title": "改善項目1", "workload": "低", "impact": "高", "time": "約20分", "score": 5, "suggestion": "具体的な改善提案", "outcome": "期待できる効果" },
-    { "title": "改善項目2", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "suggestion": "具体的な改善提案", "outcome": "期待できる効果" },
-    { "title": "改善項目3", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "suggestion": "具体的な改善提案", "outcome": "期待できる効果" }
+    {
+      "title": "改善項目1のタイトル",
+      "workload": "低",
+      "impact": "高",
+      "time": "約20分",
+      "score": 5,
+      "issue": "現状の問題点（店舗名・数値を使って具体的に）",
+      "reason": "なぜこれを優先すべきか（エリア比較・数値的根拠を含めて）",
+      "suggestion": "営業担当がそのまま使える具体的な改善提案",
+      "expected_outcome": "改善後に期待できる効果"
+    },
+    {
+      "title": "改善項目2のタイトル",
+      "workload": "低",
+      "impact": "中",
+      "time": "約20分",
+      "score": 4,
+      "issue": "現状の問題点",
+      "reason": "なぜこれを優先すべきか",
+      "suggestion": "具体的な改善提案",
+      "expected_outcome": "期待できる効果"
+    },
+    {
+      "title": "改善項目3のタイトル",
+      "workload": "低",
+      "impact": "中",
+      "time": "約20分",
+      "score": 4,
+      "issue": "現状の問題点",
+      "reason": "なぜこれを優先すべきか",
+      "suggestion": "具体的な改善提案",
+      "expected_outcome": "期待できる効果"
+    }
   ],
   "offer": {
     "title": "初回改善サポート",
@@ -59,6 +100,7 @@ Google評価: ${placeData.rating ?? "不明"}
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 4000,
+        system: systemPrompt,
         messages: [{ role: "user", content: prompt }],
       }),
     });
