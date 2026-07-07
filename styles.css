@@ -586,3 +586,37 @@ p {
   .action-list { gap: 10px; }
   .action-list article { padding: 12px; }
 }
+
+/* ========================================
+   styles.cssの末尾に追記してください
+   ======================================== */
+
+/* priority-card: 4フィールド表示 */
+.priority-detail {
+  margin-bottom: 8px;
+}
+
+.priority-label {
+  display: inline-block;
+  background: var(--mint);
+  border-radius: 4px;
+  color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  padding: 2px 7px;
+}
+
+.priority-card .priority-detail p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--ink);
+}
+
+@media print {
+  .priority-detail { margin-bottom: 5px; }
+  .priority-label { font-size: 10px; padding: 1px 5px; }
+  .priority-card .priority-detail p { font-size: 11px; line-height: 1.35; }
+}
