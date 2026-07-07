@@ -1,5 +1,4 @@
 exports.handler = async (event) => {
-  console.log("=== analyze開始 ===");
   const { placeData } = JSON.parse(event.body || "{}");
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -7,9 +6,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: "店舗データが必要です" }) };
   }
 
-  const systemPrompt = `美容サロン営業支援AI。営業担当が店舗オーナーへそのまま説明できる実践的な内容を出力する。ルール：①専門用語不使用、②提供データの数値を必ず根拠に使う、③同じ書き出し・表現を繰り返さない、④店舗名・地域名・数値を積極的に使い汎用文章にしない、⑤改善提案ごとに優先理由を明記する。`;
-
-  const prompt = `以下の店舗データをもとに診断し、JSON形式のみで回答してください。前後に説明文や\`\`\`は不要です。
+  const prompt = `あなたは美容サロンの営業支援AIです。以下の店舗データをもとに診断を行ってください。
 
 【店舗情報】
 店舗名: ${placeData.storeName}
@@ -21,9 +18,11 @@ Google評価: ${placeData.rating ?? "不明"}
 ホームページ: ${placeData.websiteUrl ?? "なし"}
 営業時間の掲載: ${placeData.hasOpeningHours ? "あり" : "なし"}
 
+以下のJSON形式のみで回答してください。前後に説明文や\`\`\`は不要です。JSONのみ出力してください。
+
 {
-  "summary": "店舗名と数値を含む診断要約（1〜2文）",
-  "closing": "数値根拠を含む営業担当へのひとこと（1文）",
+  "summary": "診断結果の1〜2文の要約",
+  "closing": "営業担当へのひとこと（1文）",
   "homepageChecks": [
     { "label": "営業時間", "passed": true, "positive": "営業時間が掲載されています", "suggestion": "営業時間を掲載してください", "outcome": "来店前に確認できます" },
     { "label": "電話番号", "passed": true, "positive": "電話番号が掲載されています", "suggestion": "電話番号を掲載してください", "outcome": "問い合わせしやすくなります" },
@@ -36,22 +35,20 @@ Google評価: ${placeData.rating ?? "不明"}
     { "label": "予約・お問い合わせボタン", "passed": false, "positive": "予約ボタンがあります", "suggestion": "目立つ位置への予約・お問い合わせボタンの設置をおすすめします", "outcome": "お客様が次の行動に進みやすくなります" }
   ],
   "priorities": [
-    { "title": "改善項目1", "workload": "低", "impact": "高", "time": "約20分", "score": 5, "issue": "数値を使った現状の問題点", "reason": "エリア比較・数値的根拠を含む優先理由", "suggestion": "具体的な改善提案", "expected_outcome": "期待できる効果" },
-    { "title": "改善項目2", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "issue": "現状の問題点", "reason": "優先理由", "suggestion": "具体的な改善提案", "expected_outcome": "期待できる効果" }
+    { "title": "改善項目1", "workload": "低", "impact": "高", "time": "約20分", "score": 5, "suggestion": "具体的な改善提案", "outcome": "期待できる効果" },
+    { "title": "改善項目2", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "suggestion": "具体的な改善提案", "outcome": "期待できる効果" },
+    { "title": "改善項目3", "workload": "低", "impact": "中", "time": "約20分", "score": 4, "suggestion": "具体的な改善提案", "outcome": "期待できる効果" }
   ],
   "offer": {
     "title": "初回改善サポート",
-    "items": ["提案項目1", "提案項目2"],
+    "items": ["提案項目1", "提案項目2", "提案項目3"],
     "cta": "まず短時間でできる改善から着手しましょう"
   }
 }
 
-homepageChecksのpassedはホームページの有無と情報から推測。prioritiesは改善効果が高い順に2件。`;
+上記のJSON構造を守り、店舗情報に基づいて各フィールドを実際の内容で埋めてください。homepageChecksのpassedはホームページの有無と情報から推測してください。prioritiesは改善効果が高い順に3件出力してください。`;
 
   try {
-    console.log("API呼び出し開始");
-    const startTime = Date.now();
-
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -61,18 +58,13 @@ homepageChecksのpassedはホームページの有無と情報から推測。pri
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 2000,
-        system: systemPrompt,
+        max_tokens: 4000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
 
-    console.log(`Anthropic返答 - 経過時間: ${Date.now() - startTime}ms`);
-
     const data = await res.json();
     const text = data.content?.[0]?.text || "";
-
-    console.log(`JSON解析開始 - 経過時間: ${Date.now() - startTime}ms`);
 
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
@@ -82,12 +74,8 @@ homepageChecksのpassedはホームページの有無と情報から推測。pri
 
     const jsonStr = text.slice(start, end + 1);
     const analysis = JSON.parse(jsonStr);
-
-    console.log(JSON.stringify(analysis, null, 2));
-    console.log(`完了 - 合計時間: ${Date.now() - startTime}ms`);
     return { statusCode: 200, body: JSON.stringify(analysis) };
   } catch (err) {
-    console.log(`エラー発生: ${err.message}`);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
