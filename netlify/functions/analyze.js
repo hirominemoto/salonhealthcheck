@@ -1,4 +1,5 @@
 exports.handler = async (event) => {
+  console.log("=== analyze開始 ===");
   const { placeData } = JSON.parse(event.body || "{}");
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -49,6 +50,9 @@ Google評価: ${placeData.rating ?? "不明"}
 homepageChecksのpassedはホームページの有無と情報から推測。prioritiesは改善効果が高い順に3件。`;
 
   try {
+    console.log("API呼び出し開始");
+    const startTime = Date.now();
+
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -58,14 +62,18 @@ homepageChecksのpassedはホームページの有無と情報から推測。pri
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 4000,
+        max_tokens: 2000,
         system: systemPrompt,
         messages: [{ role: "user", content: prompt }],
       }),
     });
 
+    console.log(`Anthropic返答 - 経過時間: ${Date.now() - startTime}ms`);
+
     const data = await res.json();
     const text = data.content?.[0]?.text || "";
+
+    console.log(`JSON解析開始 - 経過時間: ${Date.now() - startTime}ms`);
 
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
@@ -75,8 +83,11 @@ homepageChecksのpassedはホームページの有無と情報から推測。pri
 
     const jsonStr = text.slice(start, end + 1);
     const analysis = JSON.parse(jsonStr);
+
+    console.log(`完了 - 合計時間: ${Date.now() - startTime}ms`);
     return { statusCode: 200, body: JSON.stringify(analysis) };
   } catch (err) {
+    console.log(`エラー発生: ${err.message}`);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
