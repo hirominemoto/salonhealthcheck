@@ -106,15 +106,19 @@ exports.handler = async (event) => {
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  const priorities = failedItems.map(item => ({
-    key: item.key,
-    title: item.label,
-    workload: item.workload,
-    impact: item.impact,
-    time: item.time,
-    score: item.score,
-    // suggestionとoutcomeはClaudeが文章化（後述）
-  }));
+  const priorities = failedItems.map(item => {
+    const reasons = [item.suggestion];
+    if (item.outcome) reasons.push(`改善すると：${item.outcome}`);
+    return {
+      key: item.key,
+      title: item.label,
+      workload: item.workload,
+      impact: item.impact,
+      time: item.time,
+      score: item.score,
+      reasons,
+    };
+  });
 
   // ─────────────────────────────────────────
   // STEP 3: JS側で競合分析・営業ポイントを整理
@@ -167,16 +171,23 @@ exports.handler = async (event) => {
   // ─────────────────────────────────────────
   // STEP 5: Claudeは文章化のみ
   // ─────────────────────────────────────────
-  const prompt = `あなたは美容サロンの営業支援AIです。以下の分析データをもとに、営業担当がそのまま使える自然な日本語文章を生成してください。
+  const prompt = `あなたは美容サロンの営業支援AIです。
+以下の分析データは、JavaScriptが判定した事実です。
+あなたの仕事は「新しい分析をすること」ではなく、「渡された事実を営業担当が話しやすい自然な日本語に翻訳すること」だけです。
 
 【分析データ】
 ${JSON.stringify(analysisContext, null, 2)}
 
+【ルール】
+・渡されたデータ以外の情報を追加しないでください
+・数値の羅列ではなく、営業担当がそのまま話せる文章にしてください
+・「現状・課題」はそのサロン固有の状況が伝わる文章にしてください
+
 以下のJSON形式のみで回答してください。前後に説明文や\`\`\`は不要です。JSONのみ出力してください。
 
 {
-  "summary": "営業担当が最初に話す導入文（2〜3文）。数値の羅列ではなく、強みと伸びしろを自然に伝える文章。",
-  "closing": "営業担当へのひとこと（1文）。次のアクションを後押しする言葉。",
+  "summary": "営業担当が最初に話す導入文（2〜3文）。強みと伸びしろを自然に伝える。",
+  "closing": "次のアクションを後押しするひとこと（1文）。",
   "offer": {
     "title": "初回改善サポート",
     "items": ["提案項目1", "提案項目2", "提案項目3"],
@@ -185,24 +196,24 @@ ${JSON.stringify(analysisContext, null, 2)}
   "priorityTexts": [
     {
       "key": "${priorities[0]?.key || ""}",
-      "suggestion": "具体的な改善提案（1〜2文）",
-      "outcome": "期待できる効果（1文）",
-      "issue": "現状の課題（1文）",
-      "reason": "優先する理由（1文）"
+      "issue": "渡されたreasonsをもとにした現状・課題（1〜2文、そのサロン固有の言葉で）",
+      "suggestion": "渡されたreasonsをもとにした改善提案（1〜2文）",
+      "outcome": "渡されたreasonsをもとにした期待効果（1文）",
+      "reason": "このサロンにとって優先すべき理由（1文）"
     },
     {
       "key": "${priorities[1]?.key || ""}",
-      "suggestion": "具体的な改善提案（1〜2文）",
-      "outcome": "期待できる効果（1文）",
-      "issue": "現状の課題（1文）",
-      "reason": "優先する理由（1文）"
+      "issue": "渡されたreasonsをもとにした現状・課題（1〜2文、そのサロン固有の言葉で）",
+      "suggestion": "渡されたreasonsをもとにした改善提案（1〜2文）",
+      "outcome": "渡されたreasonsをもとにした期待効果（1文）",
+      "reason": "このサロンにとって優先すべき理由（1文）"
     },
     {
       "key": "${priorities[2]?.key || ""}",
-      "suggestion": "具体的な改善提案（1〜2文）",
-      "outcome": "期待できる効果（1文）",
-      "issue": "現状の課題（1文）",
-      "reason": "優先する理由（1文）"
+      "issue": "渡されたreasonsをもとにした現状・課題（1〜2文、そのサロン固有の言葉で）",
+      "suggestion": "渡されたreasonsをもとにした改善提案（1〜2文）",
+      "outcome": "渡されたreasonsをもとにした期待効果（1文）",
+      "reason": "このサロンにとって優先すべき理由（1文）"
     }
   ]
 }`;
