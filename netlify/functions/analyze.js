@@ -1,5 +1,5 @@
 exports.handler = async (event) => {
-  const { placeData } = JSON.parse(event.body || "{}");
+  const { placeData, keywords } = JSON.parse(event.body || "{}");
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!placeData) {
@@ -12,8 +12,6 @@ exports.handler = async (event) => {
   const url = placeData.websiteUrl;
   const hasWebsite = !!url;
 
-  // TODO: Phase3でHPスクレイピングによる実判定へ置き換える
-  // 現在はwebsiteUrlの有無・Google情報をもとに判定
   const homepageChecks = [
     {
       key: "openingHours",
@@ -27,7 +25,7 @@ exports.handler = async (event) => {
     {
       key: "phone",
       label: "電話番号",
-      passed: hasWebsite, // websiteがあれば電話掲載の可能性高と判定
+      passed: hasWebsite,
       positive: "電話番号が掲載されています。",
       suggestion: "ホームページに電話番号を掲載してください。",
       outcome: "問い合わせしやすくなります。",
@@ -36,7 +34,7 @@ exports.handler = async (event) => {
     {
       key: "line",
       label: "LINE導線",
-      passed: false, // URLスクレイピングなしのためデフォルトfalse（将来拡張可）
+      passed: false,
       positive: "LINE相談窓口が設置されています。",
       suggestion: "トップページにLINE相談窓口を設置してください。",
       outcome: "電話が苦手な世代の問い合わせハードルが下がります。",
@@ -63,7 +61,7 @@ exports.handler = async (event) => {
     {
       key: "booking",
       label: "予約・お問い合わせボタン",
-      passed: hasWebsite ? false : false, // 将来的にスクレイピングで判定
+      passed: false,
       positive: "予約ボタンが目立つ位置にあります。",
       suggestion: "目立つ位置に予約・お問い合わせボタンを設置してください。",
       outcome: "お客様が次の行動に進みやすくなります。",
@@ -161,6 +159,7 @@ exports.handler = async (event) => {
   // ─────────────────────────────────────────
   const analysisContext = {
     storeName: placeData.storeName,
+    keywords: keywords || "",
     strengths: homepageChecks.filter(i => i.passed).map(i => i.positive),
     weaknesses: failedItems.map(i => ({ title: i.label, suggestion: i.suggestion, outcome: i.outcome })),
     priorities,
@@ -171,6 +170,10 @@ exports.handler = async (event) => {
   // ─────────────────────────────────────────
   // STEP 5: Claudeは文章化のみ
   // ─────────────────────────────────────────
+  const keywordsLine = keywords
+    ? `重点キーワード: ${keywords}（このキーワードで集客したい意図を踏まえて文章を作成してください）`
+    : "重点キーワード: 指定なし";
+
   const prompt = `あなたは美容サロンの営業支援AIです。
 以下の分析データは、JavaScriptが判定した事実です。
 あなたの仕事は「新しい分析をすること」ではなく、「渡された事実を営業担当が話しやすい自然な日本語に翻訳すること」だけです。
@@ -178,10 +181,14 @@ exports.handler = async (event) => {
 【分析データ】
 ${JSON.stringify(analysisContext, null, 2)}
 
+【キーワード情報】
+${keywordsLine}
+
 【ルール】
 ・渡されたデータ以外の情報を追加しないでください
 ・数値の羅列ではなく、営業担当がそのまま話せる文章にしてください
 ・「現状・課題」はそのサロン固有の状況が伝わる文章にしてください
+・重点キーワードが指定されている場合は、そのキーワードに関連する提案や表現を優先的に使用してください
 
 以下のJSON形式のみで回答してください。前後に説明文や\`\`\`は不要です。JSONのみ出力してください。
 
