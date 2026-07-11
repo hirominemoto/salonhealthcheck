@@ -663,3 +663,96 @@ p {
   font-weight: 700;
   line-height: 1.2;
 }
+
+/* ========================================
+   カテゴリ評価スライド
+   ======================================== */
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.category-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.category-label {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.category-status {
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+.category-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.category-reasons {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.category-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.category-reason.positive { color: var(--teal-dark); }
+.category-reason.negative { color: var(--ink); }
+
+.reason-mark {
+  font-weight: 900;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.category-reason.positive .reason-mark { color: var(--teal); }
+.category-reason.negative .reason-mark { color: var(--coral); }
+
+.category-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+@media print {
+  .category-grid { gap: 14px; }
+  .category-card { padding: 16px; gap: 8px; }
+  .category-label { font-size: 14px; }
+  .category-desc { font-size: 11px; }
+  .category-reason { font-size: 11px; }
+  .category-count { font-size: 11px; }
+}

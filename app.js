@@ -69,6 +69,31 @@ function competitorRow(item) {
   `;
 }
 
+function categoryCard(cat) {
+  const isGood = cat.status === "良好";
+  const statusColor = isGood ? "var(--teal)" : "var(--coral)";
+  const statusBg = isGood ? "var(--mint)" : "var(--rose)";
+  const reasons = cat.reasons || [];
+  return `
+    <div class="category-card">
+      <div class="category-header">
+        <span class="category-label">${cat.label}</span>
+        <span class="category-status" style="background:${statusBg}; color:${statusColor}">${cat.status}</span>
+      </div>
+      <p class="category-desc">${cat.description}</p>
+      <ul class="category-reasons">
+        ${reasons.map(r => `
+          <li class="category-reason ${r.type}">
+            <span class="reason-mark">${r.type === "positive" ? "○" : "×"}</span>
+            <span>${r.text}</span>
+          </li>
+        `).join("")}
+      </ul>
+      <p class="category-count">${cat.passedCount} / ${cat.totalCount}項目達成</p>
+    </div>
+  `;
+}
+
 // ○を先、×を後に並べ替え
 const sortedChecks = [
   ...report.homepageChecks.filter(i => i.passed),
@@ -79,7 +104,7 @@ const failedCount = report.homepageChecks.filter((item) => !item.passed).length;
 const passedCount = report.homepageChecks.length - failedCount;
 const superiorStores = report.superiorStores || [];
 const nearbyCompetitors = report.nearbyCompetitors || [];
-const total = report.homepageChecks.length;
+const categories = report.categories || [];
 
 // ドーナツグラフSVG生成
 function donutChart(passed, failed) {
@@ -89,7 +114,6 @@ function donutChart(passed, failed) {
   const circumference = 2 * Math.PI * r;
   const passedRatio = passed / (passed + failed);
   const passedDash = circumference * passedRatio;
-  const failedDash = circumference * (1 - passedRatio);
 
   return `
     <svg class="donut-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -232,6 +256,16 @@ deck.innerHTML = [
       <ul class="check-list">
         ${sortedChecks.map(checkRow).join("")}
       </ul>
+    </div>
+  `),
+  card(`
+    <div class="slide-head">
+      <p class="eyebrow">Category Analysis</p>
+      <h2>3つの視点で見る改善ポイント</h2>
+      <p>AI視認性・集客導線・信頼材料の観点から、優先すべき領域を整理しました。</p>
+    </div>
+    <div class="category-grid">
+      ${categories.map(categoryCard).join("")}
     </div>
   `),
   card(`
