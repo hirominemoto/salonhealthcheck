@@ -1,5 +1,5 @@
 exports.handler = async (event) => {
-  const { placeData, keywords } = JSON.parse(event.body || "{}");
+  const { placeData } = JSON.parse(event.body || "{}");
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!placeData) {
@@ -16,6 +16,7 @@ exports.handler = async (event) => {
     {
       key: "openingHours",
       label: "営業時間",
+      category: "集客導線",
       passed: !!placeData.hasOpeningHours,
       positive: "営業時間がGoogleに登録されています。",
       suggestion: "Googleビジネスプロフィールに営業時間を登録してください。",
@@ -25,6 +26,7 @@ exports.handler = async (event) => {
     {
       key: "phone",
       label: "電話番号",
+      category: "集客導線",
       passed: hasWebsite,
       positive: "電話番号が掲載されています。",
       suggestion: "ホームページに電話番号を掲載してください。",
@@ -34,6 +36,7 @@ exports.handler = async (event) => {
     {
       key: "line",
       label: "LINE導線",
+      category: "集客導線",
       passed: false,
       positive: "LINE相談窓口が設置されています。",
       suggestion: "トップページにLINE相談窓口を設置してください。",
@@ -43,6 +46,7 @@ exports.handler = async (event) => {
     {
       key: "googleMap",
       label: "GoogleMapリンク",
+      category: "集客導線",
       passed: false,
       positive: "トップページに地図リンクがあります。",
       suggestion: "トップページにGoogleMapへのリンクを設置してください。",
@@ -52,6 +56,7 @@ exports.handler = async (event) => {
     {
       key: "instagram",
       label: "Instagramリンク",
+      category: "集客導線",
       passed: false,
       positive: "InstagramへのリンクがSNS流入経路を確保しています。",
       suggestion: "トップページにInstagramへのリンクを設置してください。",
@@ -61,6 +66,7 @@ exports.handler = async (event) => {
     {
       key: "booking",
       label: "予約・お問い合わせボタン",
+      category: "集客導線",
       passed: false,
       positive: "予約ボタンが目立つ位置にあります。",
       suggestion: "目立つ位置に予約・お問い合わせボタンを設置してください。",
@@ -70,6 +76,7 @@ exports.handler = async (event) => {
     {
       key: "faq",
       label: "FAQ",
+      category: "AI視認性",
       passed: false,
       positive: "FAQが設置されています。",
       suggestion: "よくある質問ページを設置してください。",
@@ -79,6 +86,7 @@ exports.handler = async (event) => {
     {
       key: "blog",
       label: "ブログ更新",
+      category: "AI視認性",
       passed: false,
       positive: "ブログやお知らせが定期更新されています。",
       suggestion: "ブログやお知らせを定期的に更新してください。",
@@ -86,18 +94,80 @@ exports.handler = async (event) => {
       workload: "中", impact: "中", time: "継続的に", score: 3,
     },
     {
-      key: "recruit",
-      label: "採用ページ",
+      key: "staff",
+      label: "スタッフ紹介",
+      category: "信頼材料",
       passed: false,
-      positive: "採用情報が掲載されています。",
-      suggestion: "採用ページへの入口を設置してください。",
-      outcome: "応募者が情報を見つけやすくなります。",
-      workload: "中", impact: "低", time: "約30分", score: 2,
+      positive: "スタッフ紹介が掲載されています。",
+      suggestion: "スタッフ紹介ページを設置してください。",
+      outcome: "誰が施術するか分かり、初来店の不安が和らぎます。",
+      workload: "中", impact: "高", time: "約60分", score: 4,
+    },
+    {
+      key: "price",
+      label: "料金表示",
+      category: "信頼材料",
+      passed: false,
+      positive: "料金が明確に掲載されています。",
+      suggestion: "料金表をホームページに掲載してください。",
+      outcome: "不安なく比較・検討できるようになります。",
+      workload: "低", impact: "高", time: "約30分", score: 5,
+    },
+    {
+      key: "cases",
+      label: "施術事例",
+      category: "信頼材料",
+      passed: false,
+      positive: "施術事例・ビフォーアフターが掲載されています。",
+      suggestion: "施術事例やビフォーアフター写真を掲載してください。",
+      outcome: "技術や仕上がりを具体的に確認でき、来店意欲が高まります。",
+      workload: "中", impact: "高", time: "約60分", score: 4,
     },
   ];
 
   // ─────────────────────────────────────────
-  // STEP 2: JS側でpriorityを選定（failed項目をscore順に3件）
+  // STEP 2: カテゴリ評価（良好／要改善＋理由）
+  // ─────────────────────────────────────────
+  const categoryDefs = [
+    { key: "ai",    label: "AI視認性", description: "AIや検索エンジンが内容を理解・引用しやすいか" },
+    { key: "lead",  label: "集客導線", description: "見つけた人が予約・問い合わせ・来店まで進みやすいか" },
+    { key: "trust", label: "信頼材料", description: "初めて見た人が「この店なら安心」と判断できる材料があるか" },
+  ];
+
+  const categoryLabelMap = {
+    "AI視認性": "ai",
+    "集客導線": "lead",
+    "信頼材料": "trust",
+  };
+
+  const categories = categoryDefs.map(def => {
+    const items = homepageChecks.filter(i => categoryLabelMap[i.category] === def.key);
+    const passed = items.filter(i => i.passed);
+    const failed = items.filter(i => !i.passed);
+    const ratio = items.length > 0 ? passed.length / items.length : 0;
+    const status = ratio >= 0.6 ? "良好" : "要改善";
+
+    // 理由：良い点1件、改善点最大2件
+    const reasons = [];
+    if (passed.length > 0) {
+      reasons.push({ type: "positive", text: passed[0].positive });
+    }
+    const failedReasons = failed.slice(0, 2).map(i => ({ type: "negative", text: i.suggestion }));
+    reasons.push(...failedReasons);
+
+    return {
+      key: def.key,
+      label: def.label,
+      description: def.description,
+      status,
+      passedCount: passed.length,
+      totalCount: items.length,
+      reasons,
+    };
+  });
+
+  // ─────────────────────────────────────────
+  // STEP 3: JS側でpriorityを選定（failed項目をscore順に3件）
   // ─────────────────────────────────────────
   const failedItems = homepageChecks
     .filter(item => !item.passed)
@@ -119,7 +189,7 @@ exports.handler = async (event) => {
   });
 
   // ─────────────────────────────────────────
-  // STEP 3: JS側で競合分析・営業ポイントを整理
+  // STEP 4: JS側で競合分析・営業ポイントを整理
   // ─────────────────────────────────────────
   const { rating, reviews, areaRating, areaReviews, nearbyCompetitors = [], superiorStores = [] } = placeData;
 
@@ -155,11 +225,10 @@ exports.handler = async (event) => {
   }
 
   // ─────────────────────────────────────────
-  // STEP 4: analysisContextを組み立てる
+  // STEP 5: analysisContextを組み立てる
   // ─────────────────────────────────────────
   const analysisContext = {
     storeName: placeData.storeName,
-    keywords: keywords || "",
     strengths: homepageChecks.filter(i => i.passed).map(i => i.positive),
     weaknesses: failedItems.map(i => ({ title: i.label, suggestion: i.suggestion, outcome: i.outcome })),
     priorities,
@@ -168,12 +237,8 @@ exports.handler = async (event) => {
   };
 
   // ─────────────────────────────────────────
-  // STEP 5: Claudeは文章化のみ
+  // STEP 6: Claudeは文章化のみ
   // ─────────────────────────────────────────
-  const keywordsLine = keywords
-    ? `重点キーワード: ${keywords}（このキーワードで集客したい意図を踏まえて文章を作成してください）`
-    : "重点キーワード: 指定なし";
-
   const prompt = `あなたは美容サロンの営業支援AIです。
 以下の分析データは、JavaScriptが判定した事実です。
 あなたの仕事は「新しい分析をすること」ではなく、「渡された事実を営業担当が話しやすい自然な日本語に翻訳すること」だけです。
@@ -181,14 +246,10 @@ exports.handler = async (event) => {
 【分析データ】
 ${JSON.stringify(analysisContext, null, 2)}
 
-【キーワード情報】
-${keywordsLine}
-
 【ルール】
 ・渡されたデータ以外の情報を追加しないでください
 ・数値の羅列ではなく、営業担当がそのまま話せる文章にしてください
 ・「現状・課題」はそのサロン固有の状況が伝わる文章にしてください
-・重点キーワードが指定されている場合は、そのキーワードに関連する提案や表現を優先的に使用してください
 
 以下のJSON形式のみで回答してください。前後に説明文や\`\`\`は不要です。JSONのみ出力してください。
 
@@ -253,7 +314,7 @@ ${keywordsLine}
     const aiText = JSON.parse(jsonStr);
 
     // ─────────────────────────────────────────
-    // STEP 6: JS判定結果 + AI文章を合体して返却
+    // STEP 7: JS判定結果 + AI文章を合体して返却
     // ─────────────────────────────────────────
     const finalPriorities = priorities.map((p, i) => {
       const pt = aiText.priorityTexts?.[i] || {};
@@ -272,6 +333,7 @@ ${keywordsLine}
       closing: aiText.closing || "",
       offer: aiText.offer || {},
       homepageChecks,
+      categories,
       priorities: finalPriorities,
       superiorStores: placeData.superiorStores || [],
       nearbyCompetitors: placeData.nearbyCompetitors || [],
