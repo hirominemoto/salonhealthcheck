@@ -140,6 +140,20 @@ deck.innerHTML = [
   card(`
     <div class="slide-head">
       <p class="eyebrow">Priority</p>
+      <h2>まず取り組みたい3つ</h2>
+    </div>
+    <ol class="priority-summary">
+      ${report.priorities.map((item, i) => `
+        <li class="priority-summary-item">
+          <span class="priority-summary-num">0${i + 1}</span>
+          <span class="priority-summary-name">${item.title}</span>
+        </li>
+      `).join("")}
+    </ol>
+  `),
+  card(`
+    <div class="slide-head">
+      <p class="eyebrow">Priority</p>
       <h2>まずここから改善</h2>
       <p>${report.summary}</p>
     </div>

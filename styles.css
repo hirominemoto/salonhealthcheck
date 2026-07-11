@@ -585,11 +585,13 @@ p {
   /* action-list の余白調整 */
   .action-list { gap: 10px; }
   .action-list article { padding: 12px; }
-}
 
-/* ========================================
-   styles.cssの末尾に追記してください
-   ======================================== */
+  /* priority-summary の印刷対応 */
+  .priority-summary { gap: 20px; }
+  .priority-summary-item { padding: 20px 28px; }
+  .priority-summary-num { font-size: 48px; }
+  .priority-summary-name { font-size: 28px; }
+}
 
 /* priority-card: 4フィールド表示 */
 .priority-detail {
@@ -619,4 +621,45 @@ p {
   .priority-detail { margin-bottom: 5px; }
   .priority-label { font-size: 10px; padding: 1px 5px; }
   .priority-card .priority-detail p { font-size: 11px; line-height: 1.35; }
+}
+
+/* ========================================
+   優先順位サマリースライド
+   ======================================== */
+
+.priority-summary {
+  display: grid;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 680px;
+}
+
+.priority-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px 32px;
+  box-shadow: 0 2px 8px rgba(31, 41, 51, 0.06);
+}
+
+.priority-summary-num {
+  color: var(--teal);
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  min-width: 72px;
+  text-align: center;
+}
+
+.priority-summary-name {
+  color: var(--ink);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
 }
