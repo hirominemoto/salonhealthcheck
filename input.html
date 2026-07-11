@@ -111,7 +111,6 @@
         background: var(--teal-dark);
       }
 
-      /* ローディング */
       .loading-overlay {
         display: none;
         position: fixed;
@@ -209,6 +208,19 @@
           />
         </div>
 
+        <div class="field">
+          <label for="keywords">
+            重点キーワード
+            <span class="optional">任意・最大3つ</span>
+          </label>
+          <input
+            type="text"
+            id="keywords"
+            placeholder="例：髪質改善、縮毛矯正、ハイトーン"
+            autocomplete="off"
+          />
+        </div>
+
         <button class="submit-btn" id="diagnoseBtn">
           <span>診断する</span>
           <span aria-hidden="true">→</span>
@@ -216,7 +228,6 @@
       </div>
     </div>
 
-    <!-- ローディング -->
     <div class="loading-overlay" id="loadingOverlay">
       <div class="loading-card">
         <div class="spinner"></div>
@@ -233,19 +244,18 @@
       });
 
       async function runDiagnosis() {
-        const name  = document.getElementById("storeName").value.trim();
-        const genre = document.getElementById("genre").value.trim();
+        const name     = document.getElementById("storeName").value.trim();
+        const genre    = document.getElementById("genre").value.trim();
+        const keywords = document.getElementById("keywords").value.trim();
         if (!name) {
           document.getElementById("storeName").focus();
           return;
         }
 
-        // ローディング表示
         document.getElementById("loadingName").textContent = name;
         document.getElementById("loadingOverlay").classList.add("active");
 
         try {
-          // ① Google Places API で店舗情報取得
           const placesRes = await fetch("/.netlify/functions/places", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -259,11 +269,10 @@
 
           const placeData = await placesRes.json();
 
-          // ② Anthropic API でホームページ診断・改善提案を生成
           const analyzeRes = await fetch("/.netlify/functions/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ placeData }),
+            body: JSON.stringify({ placeData, keywords }),
           });
 
           if (!analyzeRes.ok) {
@@ -276,7 +285,6 @@
           // デバッグ用：categoriesの確認
           console.log("categories:", JSON.stringify(analysis.categories, null, 2));
 
-          // ③ 結果をsessionStorageに保存してindex.htmlへ遷移
           const report = {
             brand: "サロンヘルスチェック",
             storeName: placeData.storeName,
