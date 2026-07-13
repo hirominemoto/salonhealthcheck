@@ -264,6 +264,17 @@ document.querySelector("#printButton").addEventListener("click", async () => {
   btn.innerHTML = "<span>⏳</span> 生成中...";
   btn.disabled = true;
 
+  // スクロール制限を一時的に解除
+  const scrollEls = document.querySelectorAll(".check-list, .competitor-list");
+  const originalStyles = Array.from(scrollEls).map(el => ({
+    maxHeight: el.style.maxHeight,
+    overflow: el.style.overflow,
+  }));
+  scrollEls.forEach(el => {
+    el.style.maxHeight = "none";
+    el.style.overflow = "visible";
+  });
+
   try {
     const { jsPDF } = window.jspdf;
     const slides = document.querySelectorAll(".slide");
@@ -287,6 +298,11 @@ document.querySelector("#printButton").addEventListener("click", async () => {
     alert("PDF生成に失敗しました。もう一度お試しください。");
     console.error(e);
   } finally {
+    // スクロール制限を元に戻す
+    scrollEls.forEach((el, i) => {
+      el.style.maxHeight = originalStyles[i].maxHeight;
+      el.style.overflow = originalStyles[i].overflow;
+    });
     btn.innerHTML = "<span aria-hidden='true'>↓</span> PDF保存";
     btn.disabled = false;
   }
