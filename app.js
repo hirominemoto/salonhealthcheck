@@ -69,31 +69,6 @@ function competitorRow(item) {
   `;
 }
 
-function categoryCard(cat) {
-  const isGood = cat.status === "良好";
-  const statusColor = isGood ? "var(--teal)" : "var(--coral)";
-  const statusBg = isGood ? "var(--mint)" : "var(--rose)";
-  const reasons = cat.reasons || [];
-  return `
-    <div class="category-card">
-      <div class="category-header">
-        <span class="category-label">${cat.label}</span>
-        <span class="category-status" style="background:${statusBg}; color:${statusColor}">${cat.status}</span>
-      </div>
-      <p class="category-desc">${cat.description}</p>
-      <ul class="category-reasons">
-        ${reasons.map(r => `
-          <li class="category-reason ${r.type}">
-            <span class="reason-mark">${r.type === "positive" ? "○" : "×"}</span>
-            <span>${r.text}</span>
-          </li>
-        `).join("")}
-      </ul>
-      <p class="category-count">${cat.passedCount} / ${cat.totalCount}項目達成</p>
-    </div>
-  `;
-}
-
 // ○を先、×を後に並べ替え
 const sortedChecks = [
   ...report.homepageChecks.filter(i => i.passed),
@@ -104,7 +79,7 @@ const failedCount = report.homepageChecks.filter((item) => !item.passed).length;
 const passedCount = report.homepageChecks.length - failedCount;
 const superiorStores = report.superiorStores || [];
 const nearbyCompetitors = report.nearbyCompetitors || [];
-const categories = report.categories || [];
+const total = report.homepageChecks.length;
 
 // ドーナツグラフSVG生成
 function donutChart(passed, failed) {
@@ -114,6 +89,7 @@ function donutChart(passed, failed) {
   const circumference = 2 * Math.PI * r;
   const passedRatio = passed / (passed + failed);
   const passedDash = circumference * passedRatio;
+  const failedDash = circumference * (1 - passedRatio);
 
   return `
     <svg class="donut-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -161,20 +137,6 @@ deck.innerHTML = [
     `,
     "cover"
   ),
-  card(`
-    <div class="slide-head">
-      <p class="eyebrow">Priority</p>
-      <h2>まず取り組みたい3つ</h2>
-    </div>
-    <ol class="priority-summary">
-      ${report.priorities.map((item, i) => `
-        <li class="priority-summary-item">
-          <span class="priority-summary-num">0${i + 1}</span>
-          <span class="priority-summary-name">${item.title}</span>
-        </li>
-      `).join("")}
-    </ol>
-  `),
   card(`
     <div class="slide-head">
       <p class="eyebrow">Priority</p>
@@ -260,16 +222,6 @@ deck.innerHTML = [
   `),
   card(`
     <div class="slide-head">
-      <p class="eyebrow">Category Analysis</p>
-      <h2>3つの視点で見る改善ポイント</h2>
-      <p>AI視認性・集客導線・信頼材料の観点から、優先すべき領域を整理しました。</p>
-    </div>
-    <div class="category-grid">
-      ${categories.map(categoryCard).join("")}
-    </div>
-  `),
-  card(`
-    <div class="slide-head">
       <p class="eyebrow">Today Action</p>
       <h2>今日のおすすめ</h2>
       <p>作業時間が短く、予約率への影響が出やすい順に並べています。</p>
@@ -307,4 +259,35 @@ deck.innerHTML = [
   ),
 ].join("");
 
-document.querySelector("#printButton").addEventListener("click", () => window.print());
+document.querySelector("#printButton").addEventListener("click", async () => {
+  const btn = document.querySelector("#printButton");
+  btn.innerHTML = "<span>⏳</span> 生成中...";
+  btn.disabled = true;
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const slides = document.querySelectorAll(".slide");
+    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1280, 720] });
+
+    for (let i = 0; i < slides.length; i++) {
+      const canvas = await html2canvas(slides[i], {
+        scale: 1.5,
+        useCORS: true,
+        backgroundColor: "#fbfbf8",
+        width: slides[i].offsetWidth,
+        height: slides[i].offsetHeight,
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      if (i > 0) pdf.addPage([1280, 720], "landscape");
+      pdf.addImage(imgData, "JPEG", 0, 0, 1280, 720);
+    }
+
+    pdf.save(`${report.storeShortName}_診断レポート.pdf`);
+  } catch (e) {
+    alert("PDF生成に失敗しました。もう一度お試しください。");
+    console.error(e);
+  } finally {
+    btn.innerHTML = "<span aria-hidden='true'>↓</span> PDF保存";
+    btn.disabled = false;
+  }
+});
