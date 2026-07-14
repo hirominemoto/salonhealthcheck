@@ -69,7 +69,6 @@ function competitorRow(item) {
   `;
 }
 
-// ○を先、×を後に並べ替え
 const sortedChecks = [
   ...report.homepageChecks.filter(i => i.passed),
   ...report.homepageChecks.filter(i => !i.passed),
@@ -81,7 +80,6 @@ const superiorStores = report.superiorStores || [];
 const nearbyCompetitors = report.nearbyCompetitors || [];
 const total = report.homepageChecks.length;
 
-// ドーナツグラフSVG生成
 function donutChart(passed, failed) {
   const r = 80;
   const cx = 100;
@@ -89,7 +87,6 @@ function donutChart(passed, failed) {
   const circumference = 2 * Math.PI * r;
   const passedRatio = passed / (passed + failed);
   const passedDash = circumference * passedRatio;
-  const failedDash = circumference * (1 - passedRatio);
 
   return `
     <svg class="donut-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -266,24 +263,27 @@ document.querySelector("#printButton").addEventListener("click", async () => {
 
   try {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1280, 720] });
     const slides = document.querySelectorAll(".slide");
+    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1080, 607] });
 
     for (let i = 0; i < slides.length; i++) {
       const canvas = await html2canvas(slides[i], {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        width: 1080,
+        height: 607,
+        windowWidth: 1080,
       });
-      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
       if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, 0, 1280, 720);
+      pdf.addImage(imgData, "JPEG", 0, 0, 1080, 607);
     }
 
     const name = report.storeShortName || "サロン診断";
     pdf.save(`${name}_診断レポート.pdf`);
   } catch (e) {
-    alert("PDF生成に失敗しました。もう一度お試しください。");
+    alert("PDF生成に失敗しました。");
     console.error(e);
   } finally {
     btn.textContent = "PDF保存";
