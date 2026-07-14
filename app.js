@@ -261,49 +261,32 @@ deck.innerHTML = [
 
 document.querySelector("#printButton").addEventListener("click", async () => {
   const btn = document.querySelector("#printButton");
-  btn.innerHTML = "<span>⏳</span> 生成中...";
+  btn.textContent = "生成中...";
   btn.disabled = true;
-
-  // スクロール制限を一時的に解除
-  const scrollEls = document.querySelectorAll(".check-list, .competitor-list");
-  const originalStyles = Array.from(scrollEls).map(el => ({
-    maxHeight: el.style.maxHeight,
-    overflow: el.style.overflow,
-  }));
-  scrollEls.forEach(el => {
-    el.style.maxHeight = "none";
-    el.style.overflow = "visible";
-  });
 
   try {
     const { jsPDF } = window.jspdf;
-    const slides = document.querySelectorAll(".slide");
     const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1280, 720] });
+    const slides = document.querySelectorAll(".slide");
 
     for (let i = 0; i < slides.length; i++) {
       const canvas = await html2canvas(slides[i], {
-        scale: 1.5,
+        scale: 2,
         useCORS: true,
-        backgroundColor: "#fbfbf8",
-        width: slides[i].offsetWidth,
-        height: slides[i].offsetHeight,
+        backgroundColor: "#ffffff"
       });
       const imgData = canvas.toDataURL("image/jpeg", 0.92);
-      if (i > 0) pdf.addPage([1280, 720], "landscape");
+      if (i > 0) pdf.addPage();
       pdf.addImage(imgData, "JPEG", 0, 0, 1280, 720);
     }
 
-    pdf.save(`${report.storeShortName}_診断レポート.pdf`);
+    const name = report.storeShortName || "サロン診断";
+    pdf.save(`${name}_診断レポート.pdf`);
   } catch (e) {
     alert("PDF生成に失敗しました。もう一度お試しください。");
     console.error(e);
   } finally {
-    // スクロール制限を元に戻す
-    scrollEls.forEach((el, i) => {
-      el.style.maxHeight = originalStyles[i].maxHeight;
-      el.style.overflow = originalStyles[i].overflow;
-    });
-    btn.innerHTML = "<span aria-hidden='true'>↓</span> PDF保存";
+    btn.textContent = "PDF保存";
     btn.disabled = false;
   }
 });
