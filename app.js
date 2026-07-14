@@ -263,21 +263,47 @@ document.querySelector("#printButton").addEventListener("click", async () => {
 
   try {
     const { jsPDF } = window.jspdf;
+    const SLIDE_W = 1080;
+    const SLIDE_H = 607;
+    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [SLIDE_W, SLIDE_H] });
     const slides = document.querySelectorAll(".slide");
-    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1080, 607] });
 
     for (let i = 0; i < slides.length; i++) {
-      const canvas = await html2canvas(slides[i], {
-        scale: 1.5,
+      const slide = slides[i];
+
+      // スライドを一時的にPC幅で固定してキャプチャ
+      const prevStyle = slide.getAttribute("style") || "";
+      slide.style.cssText = `
+        width: ${SLIDE_W}px !important;
+        min-height: ${SLIDE_H}px !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: fixed !important;
+        top: -9999px !important;
+        left: 0 !important;
+        z-index: -1 !important;
+      `;
+
+      // レンダリング待ち
+      await new Promise(r => setTimeout(r, 100));
+
+      const canvas = await html2canvas(slide, {
+        scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
-        width: 1080,
-        height: 607,
-        windowWidth: 1080,
+        width: SLIDE_W,
+        height: SLIDE_H,
+        windowWidth: SLIDE_W,
+        scrollX: 0,
+        scrollY: 0,
       });
+
+      // スタイルを元に戻す
+      slide.setAttribute("style", prevStyle);
+
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
       if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, 0, 1080, 607);
+      pdf.addImage(imgData, "JPEG", 0, 0, SLIDE_W, SLIDE_H);
     }
 
     const name = report.storeShortName || "サロン診断";
