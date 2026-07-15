@@ -100,7 +100,7 @@ const failedCount = report.homepageChecks.filter((item) => !item.passed).length;
 const passedCount = report.homepageChecks.length - failedCount;
 const superiorStores = report.superiorStores || [];
 const nearbyCompetitors = report.nearbyCompetitors || [];
-const categoryAnalysis = report.categoryAnalysis || [];
+const categoryAnalysis = report.categories || [];
 const total = report.homepageChecks.length;
 
 // ドーナツグラフSVG生成

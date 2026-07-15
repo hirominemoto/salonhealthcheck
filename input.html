@@ -208,6 +208,19 @@
           />
         </div>
 
+        <div class="field">
+          <label for="keywords">
+            重点キーワード
+            <span class="optional">任意・最大3つ</span>
+          </label>
+          <input
+            type="text"
+            id="keywords"
+            placeholder="例：髪質改善、縮毛矯正、ハイトーン"
+            autocomplete="off"
+          />
+        </div>
+
         <button class="submit-btn" id="diagnoseBtn">
           <span>診断する</span>
           <span aria-hidden="true">→</span>
@@ -232,8 +245,9 @@
       });
 
       async function runDiagnosis() {
-        const name  = document.getElementById("storeName").value.trim();
-        const genre = document.getElementById("genre").value.trim();
+        const name     = document.getElementById("storeName").value.trim();
+        const genre    = document.getElementById("genre").value.trim();
+        const keywords = document.getElementById("keywords").value.trim();
         if (!name) {
           document.getElementById("storeName").focus();
           return;
@@ -261,7 +275,7 @@
           const analyzeRes = await fetch("/.netlify/functions/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ placeData }),
+            body: JSON.stringify({ placeData, keywords }),
           });
 
           if (!analyzeRes.ok) {
@@ -287,7 +301,7 @@
             },
             homepageChecks: analysis.homepageChecks || [],
             priorities: analysis.priorities || [],
-            categoryAnalysis: analysis.categoryAnalysis || [],
+            categories: analysis.categories || [],
             superiorStores: placeData.superiorStores || [],
             nearbyCompetitors: placeData.nearbyCompetitors || [],
             summary: analysis.summary || "",
