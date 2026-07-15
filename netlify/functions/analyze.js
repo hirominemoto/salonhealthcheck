@@ -305,7 +305,7 @@ ${JSON.stringify(analysisContext, null, 2)}
       offer: aiText.offer || {},
       homepageChecks,
       priorities: finalPriorities,
-      categoryAnalysis,
+      categories: categoryAnalysis,
       superiorStores: placeData.superiorStores || [],
       nearbyCompetitors: placeData.nearbyCompetitors || [],
       map: {
