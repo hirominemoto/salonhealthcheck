@@ -69,6 +69,28 @@ function competitorRow(item) {
   `;
 }
 
+function categoryCard(cat) {
+  return `
+    <div class="category-card">
+      <div class="category-head">
+        <span class="category-status ${cat.status === '良好' ? 'ok' : 'needs'}">${cat.status}</span>
+        <h3>${cat.label}</h3>
+        <p class="category-desc">${cat.description}</p>
+      </div>
+      <ul class="category-items">
+        ${cat.items.map(item => `
+          <li class="${item.passed ? 'ok' : 'needs'}">
+            <span class="check-mark">${item.passed ? '○' : '×'}</span>
+            <span>${item.label}</span>
+          </li>
+        `).join("")}
+      </ul>
+      <p class="category-count">${cat.passed} / ${cat.total}項目達成</p>
+    </div>
+  `;
+}
+
+// ○を先、×を後に並べ替え
 const sortedChecks = [
   ...report.homepageChecks.filter(i => i.passed),
   ...report.homepageChecks.filter(i => !i.passed),
@@ -78,8 +100,10 @@ const failedCount = report.homepageChecks.filter((item) => !item.passed).length;
 const passedCount = report.homepageChecks.length - failedCount;
 const superiorStores = report.superiorStores || [];
 const nearbyCompetitors = report.nearbyCompetitors || [];
+const categoryAnalysis = report.categoryAnalysis || [];
 const total = report.homepageChecks.length;
 
+// ドーナツグラフSVG生成
 function donutChart(passed, failed) {
   const r = 80;
   const cx = 100;
@@ -114,7 +138,7 @@ function donutChart(passed, failed) {
   `;
 }
 
-deck.innerHTML = [
+const slides = [
   card(
     `
       <div class="hero-copy">
@@ -217,6 +241,23 @@ deck.innerHTML = [
       </ul>
     </div>
   `),
+];
+
+// カテゴリ分析スライド（データがある場合のみ追加）
+if (categoryAnalysis.length > 0) {
+  slides.push(card(`
+    <div class="slide-head">
+      <p class="eyebrow">Category Analysis</p>
+      <h2>3つの視点で見る改善ポイント</h2>
+      <p>AI視認性・集客導線・信頼材料の観点から、優先すべき領域を整理しました。</p>
+    </div>
+    <div class="category-grid">
+      ${categoryAnalysis.map(categoryCard).join("")}
+    </div>
+  `));
+}
+
+slides.push(
   card(`
     <div class="slide-head">
       <p class="eyebrow">Today Action</p>
@@ -253,66 +294,9 @@ deck.innerHTML = [
       </div>
     `,
     "final"
-  ),
-].join("");
+  )
+);
 
-document.querySelector("#printButton").addEventListener("click", async () => {
-  const btn = document.querySelector("#printButton");
-  btn.textContent = "生成中...";
-  btn.disabled = true;
+deck.innerHTML = slides.join("");
 
-  try {
-    const { jsPDF } = window.jspdf;
-    const SLIDE_W = 1080;
-    const SLIDE_H = 607;
-    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [SLIDE_W, SLIDE_H] });
-    const slides = document.querySelectorAll(".slide");
-
-    for (let i = 0; i < slides.length; i++) {
-      const slide = slides[i];
-
-      // スライドを一時的にPC幅で固定してキャプチャ
-      const prevStyle = slide.getAttribute("style") || "";
-      slide.style.cssText = `
-        width: ${SLIDE_W}px !important;
-        min-height: ${SLIDE_H}px !important;
-        max-height: none !important;
-        overflow: visible !important;
-        position: fixed !important;
-        top: -9999px !important;
-        left: 0 !important;
-        z-index: -1 !important;
-      `;
-
-      // レンダリング待ち
-      await new Promise(r => setTimeout(r, 100));
-
-      const canvas = await html2canvas(slide, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        width: SLIDE_W,
-        height: SLIDE_H,
-        windowWidth: SLIDE_W,
-        scrollX: 0,
-        scrollY: 0,
-      });
-
-      // スタイルを元に戻す
-      slide.setAttribute("style", prevStyle);
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, 0, SLIDE_W, SLIDE_H);
-    }
-
-    const name = report.storeShortName || "サロン診断";
-    pdf.save(`${name}_診断レポート.pdf`);
-  } catch (e) {
-    alert("PDF生成に失敗しました。");
-    console.error(e);
-  } finally {
-    btn.textContent = "PDF保存";
-    btn.disabled = false;
-  }
-});
+document.querySelector("#printButton").addEventListener("click", () => window.print());
