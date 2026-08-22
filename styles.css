@@ -723,7 +723,7 @@ p {
   .donut-wrap { gap: 14px; }
 
   /* priority-grid の余白調整 */
-  .priority-grid { gap: 8px; }
+  .priority-grid { gap: 8px; grid-template-columns: repeat(3, 1fr); }
   .priority-card { padding: 10px; gap: 7px; }
   .priority-detail { margin-bottom: 3px; }
   .priority-label { font-size: 9px; padding: 1px 4px; margin-bottom: 2px; }
