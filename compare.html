@@ -210,6 +210,113 @@
         margin-bottom: 8px;
       }
 
+      /* 凡例 */
+      .legend {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .legend-dot.good { background: var(--teal); }
+      .legend-dot.warn { background: var(--coral); }
+
+      /* INSIGHTカード */
+      .insight-points {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      .insight-point {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .insight-num {
+        background: var(--teal);
+        color: white;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 900;
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+      }
+
+      .insight-point h3 {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0 0 6px;
+        color: var(--ink);
+      }
+
+      .insight-point p {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .insight-purpose {
+        font-size: 13px;
+        color: var(--teal-dark);
+        font-weight: 700;
+        background: var(--mint);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+      }
+
+      .insight-closing {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+        margin-top: 4px;
+      }
+
+      .insight-loading {
+        text-align: center;
+        padding: 32px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .insight-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--mint);
+        border-top-color: var(--teal);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 12px;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
       /* フェーズ2プレースホルダー */
       .phase2-badge {
         display: inline-block;
@@ -368,6 +475,10 @@
         }
 
         const compareTable = `
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot good"></span>エリア平均以上</span>
+            <span class="legend-item"><span class="legend-dot warn"></span>エリア平均未満</span>
+          </div>
           <div class="compare-table-wrap">
             <table>
               <thead>
@@ -386,17 +497,19 @@
           </div>
         `;
 
-        // ── 3. 比較から見えてきたこと（フェーズ2プレースホルダー） ──
+        // ── 3. 比較から見えてきたこと ──
         const insightSection = `
           <div class="insight-section">
             <div class="section-head">
               <p class="eyebrow">Insight</p>
-              <h2>比較して見えてきたこと <span class="phase2-badge">準備中</span></h2>
-              <p>系列内の共通課題・店舗固有の特徴・横展開できる強みをAIが分析します。</p>
+              <h2>比較して見えてきたこと</h2>
+              <p>この店舗の組み合わせから、営業の糸口になりそうなポイントをお伝えします。</p>
             </div>
-            <div class="insight-placeholder">
-              <strong>AI比較分析（フェーズ2）</strong>
-              系列全体の共通課題、店舗ごとの特徴、横展開できる強みをここに表示します。
+            <div id="insightContent">
+              <div class="insight-loading">
+                <div class="insight-spinner"></div>
+                比較データを分析しています…
+              </div>
             </div>
           </div>
         `;
@@ -420,6 +533,53 @@
 
           ${insightSection}
         `;
+      }
+
+      // compare.js を呼んでINSIGHTを生成
+      async function loadInsight(reports) {
+        const purpose = sessionStorage.getItem("comparePurpose") || "series";
+        try {
+          const res = await fetch("/.netlify/functions/compare", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reports, purpose }),
+          });
+
+          if (!res.ok) throw new Error("分析の取得に失敗しました");
+          const insight = await res.json();
+
+          const purposeLabel = purpose === "competitor"
+            ? "競合店比較（同一・近接エリアの異なる店舗）"
+            : "系列店比較（同じブランド・法人の店舗）";
+
+          const pointsHtml = insight.points.map((p, i) => `
+            <div class="insight-point">
+              <div class="insight-num">${i + 1}</div>
+              <div>
+                <h3>${p.title}</h3>
+                <p>${p.body}</p>
+              </div>
+            </div>
+          `).join("");
+
+          document.getElementById("insightContent").innerHTML = `
+            <div class="insight-purpose">${insight.purposeComment || purposeLabel}</div>
+            <div class="insight-points">${pointsHtml}</div>
+            <p class="insight-closing">${insight.closing}</p>
+          `;
+        } catch (err) {
+          document.getElementById("insightContent").innerHTML = `
+            <div class="insight-placeholder">
+              <strong>分析を取得できませんでした</strong>
+              比較表の内容をご確認ください。
+            </div>
+          `;
+        }
+      }
+
+      // レンダリング後にINSIGHTを非同期取得
+      if (reports && reports.length >= 2) {
+        loadInsight(reports);
       }
 
       function goToDetail(index) {

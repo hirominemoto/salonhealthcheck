@@ -264,6 +264,19 @@
           <span style="font-size:11px;font-weight:500;opacity:0.7">最大5店舗</span>
         </button>
 
+        <!-- 比較目的選択（2店舗以上のとき表示） -->
+        <div id="comparePurpose" style="display:none;margin-bottom:16px;">
+          <p style="font-size:13px;font-weight:700;color:var(--ink);margin:0 0 10px;">比較の目的</p>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:white;border:1.5px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;font-size:14px;font-weight:700;color:var(--ink);">
+            <input type="radio" name="purpose" value="series" checked style="accent-color:var(--teal);width:16px;height:16px;" />
+            系列店を比較する（同じブランド・法人の店舗）
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:white;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;color:var(--ink);">
+            <input type="radio" name="purpose" value="competitor" style="accent-color:var(--teal);width:16px;height:16px;" />
+            競合店を比較する（同一・近接エリアの異なる店舗）
+          </label>
+        </div>
+
         <!-- 比較モード通知 -->
         <div class="compare-notice" id="compareNotice">
           複数店舗が入力されています。診断後に比較レポートが表示されます。
@@ -333,6 +346,7 @@
         const count = document.querySelectorAll(".store-block").length;
         document.getElementById("addStoreBtn").disabled = count >= MAX_STORES;
         document.getElementById("compareNotice").classList.toggle("visible", count >= 2);
+        document.getElementById("comparePurpose").style.display = count >= 2 ? "block" : "none";
         document.getElementById("submitLabel").textContent = count >= 2 ? `${count}店舗を比較診断` : "診断する";
       }
 
@@ -423,7 +437,9 @@
             window.location.href = "./index.html";
           } else {
             // 複数店舗：比較ページへ
+            const purpose = document.querySelector('input[name="purpose"]:checked')?.value || "series";
             sessionStorage.setItem("salonReports", JSON.stringify(reports));
+            sessionStorage.setItem("comparePurpose", purpose);
             window.location.href = "./compare.html";
           }
 
