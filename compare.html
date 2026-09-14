@@ -227,6 +227,21 @@
         .compare-page { padding: 20px 12px 60px; }
         .section-head h2 { font-size: 22px; }
       }
+
+      @media print {
+        @page { size: A4 landscape; margin: 12mm; }
+        body { background: white; }
+        .topbar { display: none; }
+        .compare-page { padding: 0; max-width: none; }
+        .compare-table-wrap { overflow: visible; box-shadow: none; }
+        .insight-section { box-shadow: none; }
+        .store-card { box-shadow: none; border: 1px solid #ccc; }
+        .detail-link { display: none; }
+        table { font-size: 12px; }
+        thead th { font-size: 11px; padding: 8px 10px; }
+        tbody td { padding: 7px 10px; }
+        .phase2-badge { display: none; }
+      }
     </style>
   </head>
   <body>
