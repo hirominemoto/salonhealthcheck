@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>サロンヘルスチェック｜比較診断</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .compare-page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+
+      /* サマリーカード横並び */
+      .store-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 40px;
+      }
+
+      .store-card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+      }
+
+      .store-card-name {
+        font-size: 17px;
+        font-weight: 900;
+        color: var(--ink);
+        margin: 0 0 4px;
+      }
+
+      .store-card-area {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 16px;
+      }
+
+      .store-card-stats {
+        display: grid;
+        gap: 8px;
+      }
+
+      .store-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 13px;
+      }
+
+      .store-stat-label {
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .store-stat-value {
+        font-weight: 900;
+        color: var(--ink);
+        font-size: 16px;
+      }
+
+      .store-stat-value.warn { color: var(--coral); }
+      .store-stat-value.good { color: var(--teal); }
+
+      .detail-link {
+        display: block;
+        margin-top: 16px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--teal-dark);
+        background: var(--mint);
+        border-radius: 8px;
+        padding: 8px;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        width: 100%;
+        font-family: "Noto Sans JP", "Hiragino Sans", Meiryo, system-ui, sans-serif;
+      }
+
+      .detail-link:hover { background: #c5ead8; }
+
+      /* セクションヘッダー */
+      .section-head {
+        margin-bottom: 20px;
+      }
+
+      .section-head h2 {
+        font-size: 28px;
+        font-weight: 900;
+        margin: 6px 0 8px;
+      }
+
+      .section-head p {
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      /* 比較表 */
+      .compare-table-wrap {
+        background: var(--paper);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        overflow-x: auto;
+        margin-bottom: 40px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      thead th {
+        background: var(--ink);
+        color: white;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 14px 18px;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      thead th:first-child {
+        border-radius: 12px 0 0 0;
+        min-width: 160px;
+      }
+
+      thead th:last-child {
+        border-radius: 0 12px 0 0;
+      }
+
+      tbody tr {
+        border-bottom: 1px solid var(--line);
+      }
+
+      tbody tr:last-child { border-bottom: none; }
+
+      tbody tr.category-row td {
+        background: #f0f0ee;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--teal-dark);
+        letter-spacing: 0.06em;
+        padding: 8px 18px;
+      }
+
+      tbody td {
+        padding: 12px 18px;
+        color: var(--ink);
+        font-weight: 700;
+        vertical-align: middle;
+      }
+
+      tbody td:first-child {
+        color: var(--muted);
+        font-weight: 500;
+        font-size: 13px;
+      }
+
+      .cell-ok {
+        color: var(--teal);
+        font-size: 18px;
+      }
+
+      .cell-needs {
+        color: var(--coral);
+        font-size: 18px;
+      }
+
+      .score-chip {
+        display: inline-block;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 3px 10px;
+      }
+
+      .score-chip.high { background: var(--mint); color: var(--teal-dark); }
+      .score-chip.low { background: var(--rose); color: var(--coral); }
+
+      /* 比較から見えてきたこと */
+      .insight-section {
+        background: var(--paper);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 36px;
+        margin-bottom: 40px;
+      }
+
+      .insight-placeholder {
+        background: #f0f0ee;
+        border-radius: 8px;
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .insight-placeholder strong {
+        display: block;
+        font-size: 16px;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+
+      /* フェーズ2プレースホルダー */
+      .phase2-badge {
+        display: inline-block;
+        background: var(--gold);
+        color: white;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      @media (max-width: 700px) {
+        .compare-page { padding: 20px 12px 60px; }
+        .section-head h2 { font-size: 22px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Salon Health Check</p>
+        <h1>比較診断レポート</h1>
+      </div>
+      <div class="actions" style="display:flex;gap:10px;">
+        <button type="button" onclick="location.href='./input.html'" style="background:none;border:1.5px solid var(--teal);color:var(--teal-dark);border-radius:8px;padding:0 16px;min-height:40px;font-size:14px;font-weight:700;cursor:pointer;">← 診断に戻る</button>
+        <button type="button" id="printButton" aria-label="印刷またはPDF保存">
+          <span aria-hidden="true">↓</span>
+          PDF保存
+        </button>
+      </div>
+    </header>
+
+    <main class="compare-page" id="compareMain"></main>
+
+    <script>
+      const reports = (() => {
+        try {
+          const stored = sessionStorage.getItem("salonReports");
+          return stored ? JSON.parse(stored) : null;
+        } catch { return null; }
+      })();
+
+      if (!reports || reports.length < 2) {
+        document.getElementById("compareMain").innerHTML = `
+          <div style="text-align:center;padding:80px 20px;">
+            <p style="font-size:18px;font-weight:700;color:var(--muted);">比較データが見つかりません。</p>
+            <a href="./input.html" style="display:inline-block;margin-top:20px;color:var(--teal-dark);font-weight:700;">← 診断に戻る</a>
+          </div>
+        `;
+      } else {
+        renderCompare(reports);
+      }
+
+      function renderCompare(reports) {
+        const main = document.getElementById("compareMain");
+
+        // ── 1. 店舗サマリーカード ──
+        const storeCards = reports.map((r, i) => {
+          const hpPassed = r.homepageChecks.filter(c => c.passed).length;
+          const hpTotal = r.homepageChecks.length;
+          const ratingDiff = r.map.areaRating ? (r.map.rating - r.map.areaRating).toFixed(1) : null;
+          const ratingClass = ratingDiff >= 0 ? "good" : "warn";
+
+          return `
+            <div class="store-card">
+              <p class="store-card-name">${r.storeName}</p>
+              <p class="store-card-area">${r.area || ""}</p>
+              <div class="store-card-stats">
+                <div class="store-stat">
+                  <span class="store-stat-label">Google評価</span>
+                  <span class="store-stat-value ${ratingClass}">${r.map.rating ?? "-"}</span>
+                </div>
+                <div class="store-stat">
+                  <span class="store-stat-label">口コミ数</span>
+                  <span class="store-stat-value">${r.map.reviews ?? "-"}件</span>
+                </div>
+                <div class="store-stat">
+                  <span class="store-stat-label">HP達成</span>
+                  <span class="store-stat-value">${hpPassed}/${hpTotal}項目</span>
+                </div>
+                <div class="store-stat">
+                  <span class="store-stat-label">優先改善</span>
+                  <span class="store-stat-value warn">${r.priorities.length}件</span>
+                </div>
+              </div>
+              <button class="detail-link" onclick="goToDetail(${i})">詳細レポートを見る →</button>
+            </div>
+          `;
+        }).join("");
+
+        // ── 2. 比較表 ──
+        const storeHeaders = reports.map(r =>
+          `<th>${r.storeName}</th>`
+        ).join("");
+
+        // Google評価・口コミ行
+        const ratingRow = `
+          <tr>
+            <td>Google評価</td>
+            ${reports.map(r => {
+              const diff = r.map.areaRating ? r.map.rating - r.map.areaRating : 0;
+              return `<td><span class="score-chip ${diff >= 0 ? 'high' : 'low'}">${r.map.rating ?? "-"}</span></td>`;
+            }).join("")}
+          </tr>
+        `;
+
+        const reviewsRow = `
+          <tr>
+            <td>口コミ数</td>
+            ${reports.map(r => {
+              const diff = r.map.areaReviews ? r.map.reviews - r.map.areaReviews : 0;
+              return `<td><span class="score-chip ${diff >= 0 ? 'high' : 'low'}">${r.map.reviews ?? "-"}件</span></td>`;
+            }).join("")}
+          </tr>
+        `;
+
+        // HP項目別比較
+        const allCheckKeys = reports[0].homepageChecks.map(c => ({ key: c.key, label: c.label }));
+
+        // カテゴリ分類
+        const categories = {
+          "集客導線": ["openingHours", "phone", "line", "googleMap", "instagram", "booking"],
+          "信頼材料": ["faq", "blog", "recruit"],
+        };
+
+        let checkRows = "";
+        for (const [catLabel, keys] of Object.entries(categories)) {
+          checkRows += `<tr class="category-row"><td colspan="${reports.length + 1}">${catLabel}</td></tr>`;
+          for (const key of keys) {
+            const checkItem = allCheckKeys.find(c => c.key === key);
+            if (!checkItem) continue;
+            const cells = reports.map(r => {
+              const item = r.homepageChecks.find(c => c.key === key);
+              const passed = item?.passed ?? false;
+              return `<td class="${passed ? 'cell-ok' : 'cell-needs'}">${passed ? "○" : "×"}</td>`;
+            }).join("");
+            checkRows += `<tr><td>${checkItem.label}</td>${cells}</tr>`;
+          }
+        }
+
+        const compareTable = `
+          <div class="compare-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>診断項目</th>
+                  ${storeHeaders}
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="category-row"><td colspan="${reports.length + 1}">Google Map</td></tr>
+                ${ratingRow}
+                ${reviewsRow}
+                ${checkRows}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        // ── 3. 比較から見えてきたこと（フェーズ2プレースホルダー） ──
+        const insightSection = `
+          <div class="insight-section">
+            <div class="section-head">
+              <p class="eyebrow">Insight</p>
+              <h2>比較して見えてきたこと <span class="phase2-badge">準備中</span></h2>
+              <p>系列内の共通課題・店舗固有の特徴・横展開できる強みをAIが分析します。</p>
+            </div>
+            <div class="insight-placeholder">
+              <strong>AI比較分析（フェーズ2）</strong>
+              系列全体の共通課題、店舗ごとの特徴、横展開できる強みをここに表示します。
+            </div>
+          </div>
+        `;
+
+        // ── 組み立て ──
+        main.innerHTML = `
+          <div class="section-head" style="margin-bottom:24px;">
+            <p class="eyebrow">Salon Health Check</p>
+            <h2>${reports.length}店舗の比較診断</h2>
+            <p>${reports[0].diagnosisDate} 実施</p>
+          </div>
+
+          <div class="store-cards">${storeCards}</div>
+
+          <div class="section-head">
+            <p class="eyebrow">Comparison</p>
+            <h2>店舗比較</h2>
+            <p>診断項目を横断して、強みと改善余地を一覧で確認できます。</p>
+          </div>
+          ${compareTable}
+
+          ${insightSection}
+        `;
+      }
+
+      function goToDetail(index) {
+        const reports = JSON.parse(sessionStorage.getItem("salonReports") || "[]");
+        if (reports[index]) {
+          sessionStorage.setItem("salonReport", JSON.stringify(reports[index]));
+          window.location.href = "./index.html";
+        }
+      }
+
+      document.getElementById("printButton").addEventListener("click", () => window.print());
+    </script>
+  </body>
+</html>
